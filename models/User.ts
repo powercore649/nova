@@ -12,6 +12,6 @@ const UserSchema: Schema = new Schema({
     role: { type: String, default: 'staff' }, // 'admin', 'staff'
 });
 
-const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema, 'codex_users');
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema, 'nova-browser_users');
 
 export default User;
