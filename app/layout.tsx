@@ -5,8 +5,8 @@ import './globals.css';
 const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Codexdev ',
-  description: 'codex is love',
+  title: 'nova-browser ',
+  description: 'browser is love',
 };
 
 export default function RootLayout({
