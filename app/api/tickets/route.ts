@@ -15,7 +15,7 @@ function isValidEmail(email: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function sendToDiscord(ticket: { _id: string; name: string; email: string; subject: string; message: string; createdAt: Date }) {
+async function sendToDiscord(ticket: { _id: unknown; name: string; email: string; subject: string; message: string; createdAt: Date }) {
     if (!DISCORD_WEBHOOK_URL) {
         console.warn('DISCORD_WEBHOOK_URL is not set — skipping Discord notification.');
         return;
@@ -30,7 +30,7 @@ async function sendToDiscord(ticket: { _id: string; name: string; email: string;
                     { name: 'Subject', value: ticket.subject.slice(0, 256) || '(none)', inline: false },
                     { name: 'From', value: `${ticket.name} (${ticket.email})`, inline: false },
                     { name: 'Message', value: ticket.message.slice(0, 1000) || '(empty)', inline: false },
-                    { name: 'Ticket ID', value: ticket._id, inline: false },
+                    { name: 'Ticket ID', value: String(ticket._id), inline: false },
                 ],
                 timestamp: new Date(ticket.createdAt).toISOString(),
             },
