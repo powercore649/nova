@@ -1,26 +1,9 @@
-<<<<<<< HEAD
-# nova-browserDev
-=======
-<<<<<<< HEAD
-# CodexDev
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
-
-**nova-browserDev** is a premium, high-performance code sharing and publishing platform designed for teams and developers. It transforms raw HTML into beautiful, auto-themed webpages and provides a centralized repository for your organization's most valuable code assets.
-
-
-<<<<<<< HEAD
-![nova-browserDev Banner](https://i.ibb.co/39MmWh7Y/image.png)
-=======
-![CodexDev Banner](https://i.ibb.co/39MmWh7Y/image.png)
-=======
 # nova-browserDev
 
 **nova-browserDev** is a premium, high-performance code sharing and publishing platform designed for teams and developers. It transforms raw HTML into beautiful, auto-themed webpages and provides a centralized repository for your organization's most valuable code assets.
 
 
 ![nova-browserDev Banner](https://i.ibb.co/39MmWh7Y/image.png)
->>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
 
 
 ## 🚀 Features
@@ -46,18 +29,8 @@
 
 ### 1. Clone & Install
 ```bash
-<<<<<<< HEAD
 git clone https://github.com/devrock07/nova-browserDev.git
 cd nova-browserDev
-=======
-<<<<<<< HEAD
-git clone https://github.com/devrock07/CodexDev.git
-cd CodexDev
-=======
-git clone https://github.com/devrock07/nova-browserDev.git
-cd nova-browserDev
->>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
 npm install
 ```
 
@@ -92,21 +65,7 @@ This project is optimized for deployment on **Netlify** or **Vercel**.
 
 ## 🫡 Credits & Authors
 
-<<<<<<< HEAD
 **Made with ❤️ by [devrock07](https://github.com/devrock07)** for **nova-browserDev**.
 
 ---
 *© 2025 nova-browserDev. All rights reserved.*
-=======
-<<<<<<< HEAD
-**Made with ❤️ by [devrock07](https://github.com/devrock07)** for **CodexDev**.
-
----
-*© 2025 CodexDev. All rights reserved.*
-=======
-**Made with ❤️ by [devrock07](https://github.com/devrock07)** for **nova-browserDev**.
-
----
-*© 2025 nova-browserDev. All rights reserved.*
->>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae

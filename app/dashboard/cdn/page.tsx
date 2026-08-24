@@ -168,18 +168,8 @@ export default function CDNDashboard() {
                 marginBottom: '2rem'
             }}>
                 <div className="glass-card-static" style={{
-<<<<<<< HEAD
                     background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
                     borderColor: 'rgba(34, 197, 94, 0.2)'
-=======
-<<<<<<< HEAD
-                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.05))',
-                    borderColor: 'rgba(56, 189, 248, 0.2)'
-=======
-                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
-                    borderColor: 'rgba(34, 197, 94, 0.2)'
->>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
                 }}>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Total Files
@@ -190,18 +180,8 @@ export default function CDNDashboard() {
                 </div>
 
                 <div className="glass-card-static" style={{
-<<<<<<< HEAD
                     background: 'linear-gradient(135deg, rgba(21, 128, 61, 0.15), rgba(21, 128, 61, 0.05))',
                     borderColor: 'rgba(21, 128, 61, 0.3)'
-=======
-<<<<<<< HEAD
-                    background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.1), rgba(192, 132, 252, 0.05))',
-                    borderColor: 'rgba(192, 132, 252, 0.2)'
-=======
-                    background: 'linear-gradient(135deg, rgba(21, 128, 61, 0.15), rgba(21, 128, 61, 0.05))',
-                    borderColor: 'rgba(21, 128, 61, 0.3)'
->>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
->>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
                 }}>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Storage Used
