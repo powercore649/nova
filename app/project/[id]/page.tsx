@@ -31,7 +31,15 @@ export async function generateMetadata(
         openGraph: {
             title: project.title,
             description: project.description,
+<<<<<<< HEAD
             siteName: 'nova-browser CDN',
+=======
+<<<<<<< HEAD
+            siteName: 'Codex CDN',
+=======
+            siteName: 'nova-browser CDN',
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
             type: 'website',
         }
     }
@@ -49,9 +57,27 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     // We inject the premium theme CSS so the user's content looks like the site
     const themeCSS = `
     <style>
+<<<<<<< HEAD
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
         
         :root {
+=======
+<<<<<<< HEAD
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent-primary: #38bdf8;
+            --accent-secondary: #818cf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+=======
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+        
+        :root {
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
             --bg-dark: #0a0a0a;
             --bg-secondary: #131813;
             --accent-primary: #22c55e;
@@ -59,13 +85,25 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             --text-primary: #f2f5f2;
             --text-secondary: #a3b8ab;
             --glass-bg: rgba(19, 24, 19, 0.7);
+<<<<<<< HEAD
+=======
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
         body { 
             margin: 0; 
             padding: 2rem; 
+<<<<<<< HEAD
             font-family: 'JetBrains Mono', monospace; 
+=======
+<<<<<<< HEAD
+            font-family: 'Outfit', sans-serif; 
+=======
+            font-family: 'JetBrains Mono', monospace; 
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
             background: linear-gradient(135deg, var(--bg-dark), #000000); 
             color: var(--text-primary);
             min-height: 100vh;

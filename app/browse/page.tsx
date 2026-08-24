@@ -172,7 +172,15 @@ export default function BrowsePage() {
                         }}
                         onFocus={(e) => {
                             e.target.style.borderColor = 'var(--accent-primary)';
+<<<<<<< HEAD
                             e.target.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1)';
+=======
+<<<<<<< HEAD
+                            e.target.style.boxShadow = '0 0 0 3px rgba(56, 189, 248, 0.1)';
+=======
+                            e.target.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1)';
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
                         }}
                         onBlur={(e) => {
                             e.target.style.borderColor = 'var(--card-border)';

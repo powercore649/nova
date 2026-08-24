@@ -12,6 +12,14 @@ const UserSchema: Schema = new Schema({
     role: { type: String, default: 'staff' }, // 'admin', 'staff'
 });
 
+<<<<<<< HEAD
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema, 'nova-browser_users');
+=======
+<<<<<<< HEAD
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema, 'codex_users');
+=======
+const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema, 'nova-browser_users');
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
 
 export default User;

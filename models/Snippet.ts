@@ -26,6 +26,14 @@ const SnippetSchema: Schema = new Schema(
 );
 
 // Check if model already exists to prevent overwrite error in hot reload
+<<<<<<< HEAD
 const Snippet: Model<ISnippet> = mongoose.models.Snippet || mongoose.model<ISnippet>('Snippet', SnippetSchema, 'nova-browser_snippets');
+=======
+<<<<<<< HEAD
+const Snippet: Model<ISnippet> = mongoose.models.Snippet || mongoose.model<ISnippet>('Snippet', SnippetSchema, 'codex_snippets');
+=======
+const Snippet: Model<ISnippet> = mongoose.models.Snippet || mongoose.model<ISnippet>('Snippet', SnippetSchema, 'nova-browser_snippets');
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
+>>>>>>> 1bdfeb0db1a2d0f29da465beeb1cdd78b76f54ae
 
 export default Snippet;
