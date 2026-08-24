@@ -36,14 +36,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     try {
-        const { title, description, code, language, tags } = await req.json();
+        const { title, description, code, language, tags, downloadUrl, youtubeUrl } = await req.json();
         await dbConnect();
 
         const tagsArray = Array.isArray(tags) ? tags : tags?.split(',').map((t: string) => t.trim());
 
         const project = await Snippet.findByIdAndUpdate(
             id,
-            { title, description, code, language, tags: tagsArray },
+            { title, description, code, language, tags: tagsArray, downloadUrl, youtubeUrl },
             { new: true }
         );
 

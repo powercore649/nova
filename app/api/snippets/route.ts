@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { title, description, code, language, tags } = await req.json();
+        const { title, description, code, language, tags, downloadUrl, youtubeUrl } = await req.json();
         await dbConnect();
 
         // Split tags string into array if needed
@@ -34,7 +34,9 @@ export async function POST(req: Request) {
             description,
             code,
             language,
-            tags: tagsArray
+            tags: tagsArray,
+            downloadUrl,
+            youtubeUrl,
         });
 
         return NextResponse.json({ success: true, snippet });

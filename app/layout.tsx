@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google';
+import { JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
-const outfit = Outfit({ subsets: ['latin'] });
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'nova-browser ',
-  description: 'browser is love',
+  title: 'nova-browserdev ',
+  description: 'nova-browser is love',
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={outfit.className}>{children}</body>
+      <body className={jetbrainsMono.className}>{children}</body>
     </html>
   );
 }

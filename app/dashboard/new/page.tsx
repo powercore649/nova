@@ -11,7 +11,9 @@ export default function NewProjectPage() {
         description: '',
         language: 'html', // Enforced
         code: '',
-        tags: ''
+        tags: '',
+        downloadUrl: '',
+        youtubeUrl: '',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -98,6 +100,33 @@ export default function NewProjectPage() {
                         onChange={e => setFormData({ ...formData, tags: e.target.value })}
                         placeholder="Comma separated: blog, update, news"
                     />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Download URL (optional)</label>
+                    <input
+                        type="text"
+                        className="glass-card"
+                        style={{ width: '100%', padding: '0.75rem', color: 'white', background: 'rgba(0,0,0,0.2)', outline: 'none' }}
+                        value={formData.downloadUrl}
+                        onChange={e => setFormData({ ...formData, downloadUrl: e.target.value })}
+                        placeholder="https://... link to a downloadable ZIP"
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>📺 YouTube Tutorial URL (optional)</label>
+                    <input
+                        type="text"
+                        className="glass-card"
+                        style={{ width: '100%', padding: '0.75rem', color: 'white', background: 'rgba(0,0,0,0.2)', outline: 'none' }}
+                        value={formData.youtubeUrl}
+                        onChange={e => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                        placeholder="https://youtube.com/watch?v=... or https://youtu.be/..."
+                    />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '0.4rem' }}>
+                        Shown as an embedded tutorial video when visitors click this project.
+                    </p>
                 </div>
 
                 <button type="submit" className="btn-primary" style={{ padding: '1rem', fontSize: '1rem' }}>

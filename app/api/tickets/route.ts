@@ -15,7 +15,7 @@ function isValidEmail(email: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-async function sendToDiscord(ticket: { _id: string; name: string; email: string; subject: string; message: string; createdAt: Date }) {
+async function sendToDiscord(ticket: { _id: unknown; name: string; email: string; subject: string; message: string; createdAt: Date }) {
     if (!DISCORD_WEBHOOK_URL) {
         console.warn('DISCORD_WEBHOOK_URL is not set — skipping Discord notification.');
         return;
@@ -30,7 +30,7 @@ async function sendToDiscord(ticket: { _id: string; name: string; email: string;
                     { name: 'Subject', value: ticket.subject.slice(0, 256) || '(none)', inline: false },
                     { name: 'From', value: `${ticket.name} (${ticket.email})`, inline: false },
                     { name: 'Message', value: ticket.message.slice(0, 1000) || '(empty)', inline: false },
-                    { name: 'Ticket ID', value: ticket._id, inline: false },
+                    { name: 'Ticket ID', value: String(ticket._id), inline: false },
                 ],
                 timestamp: new Date(ticket.createdAt).toISOString(),
             },
@@ -85,14 +85,7 @@ export async function POST(req: NextRequest) {
 
         // Fire and forget — don't block the response on Discord's latency,
         // but still await so serverless functions don't get killed before it sends.
-        await sendToDiscord({
-            _id: ticket._id.toString(),
-            name: ticket.name,
-            email: ticket.email,
-            subject: ticket.subject,
-            message: ticket.message,
-            createdAt: ticket.createdAt,
-        });
+        await sendToDiscord(ticket);
 
         return NextResponse.json({ success: true, ticketId: ticket._id }, { status: 201 });
     } catch (error) {

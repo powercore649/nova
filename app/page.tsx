@@ -2,23 +2,61 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import DetailModal, { DetailItem } from '@/components/DetailModal';
+
+interface LatestItem {
+  _id: string;
+  kind: 'project' | 'file';
+  createdAt: string;
+  // project fields
+  title?: string;
+  description?: string;
+  tags?: string[];
+  downloadUrl?: string;
+  // file fields
+  originalName?: string;
+  fileType?: 'image' | 'zip';
+  fileUrl?: string;
+  thumbnailUrl?: string;
+  fileSize?: number;
+  // shared
+  youtubeUrl?: string;
+}
+
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function Home() {
-  const [snippets, setSnippets] = useState<any[]>([]);
+  const [items, setItems] = useState<LatestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [detail, setDetail] = useState<LatestItem | null>(null);
 
   useEffect(() => {
-    fetch('/api/snippets')
-      .then(res => res.json())
-      .then(data => {
-        if (data.snippets) {
-          setSnippets(data.snippets.slice(0, 6)); // Show only 6 latest
-        }
+    Promise.all([
+      fetch('/api/snippets').then(res => res.json()).catch(() => ({ snippets: [] })),
+      fetch('/api/files').then(res => res.json()).catch(() => ({ files: [] })),
+    ])
+      .then(([snippetData, fileData]) => {
+        const projects: LatestItem[] = (snippetData.snippets || []).map((s: any) => ({
+          ...s,
+          kind: 'project' as const,
+        }));
+        const files: LatestItem[] = (fileData.files || []).map((f: any) => ({
+          ...f,
+          kind: 'file' as const,
+        }));
+        const merged = [...projects, ...files].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setItems(merged.slice(0, 6));
         setLoading(false);
       })
       .catch(err => {
-        console.error('Failed to fetch codes:', err);
+        console.error('Failed to fetch latest items:', err);
         setLoading(false);
       });
   }, []);
@@ -45,7 +83,7 @@ export default function Home() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Codex
+            nova-browser
           </Link>
 
           {/* Desktop Menu */}
@@ -58,6 +96,12 @@ export default function Home() {
             </Link>
             <Link href="/docs" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
               Docs
+            </Link>
+            <Link href="/files" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Files
+            </Link>
+            <Link href="/support" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Support
             </Link>
             <Link href="/login" className="btn btn-primary" style={{ padding: '0.625rem 1.25rem', fontSize: '0.9rem' }}>
               Staff Login
@@ -140,6 +184,32 @@ export default function Home() {
               Docs
             </Link>
             <Link
+              href="/files"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-secondary)',
+                fontWeight: 500,
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              Files
+            </Link>
+            <Link
+              href="/support"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-secondary)',
+                fontWeight: 500,
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              Support
+            </Link>
+            <Link
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="btn btn-primary"
@@ -161,8 +231,8 @@ export default function Home() {
           display: 'inline-block',
           marginBottom: '1rem',
           padding: '0.5rem 1rem',
-          background: 'rgba(56, 189, 248, 0.1)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          background: 'rgba(34, 197, 94, 0.1)',
+          border: '1px solid rgba(34, 197, 94, 0.3)',
           borderRadius: 'var(--radius-full)',
           color: 'var(--accent-primary)',
           fontSize: '0.875rem',
@@ -178,7 +248,7 @@ export default function Home() {
           fontFamily: 'var(--font-display)',
           fontWeight: 800
         }}>
-          Codex Dev <br />
+          nova-browser Dev <br />
           <span className="gradient-text">average coders.</span>
         </h1>
 
@@ -253,7 +323,7 @@ export default function Home() {
               </div>
             ))}
           </div>
-        ) : snippets.length === 0 ? (
+        ) : items.length === 0 ? (
           <div className="glass-card" style={{
             textAlign: 'center',
             padding: '4rem 2rem',
@@ -272,109 +342,189 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-3 animate-slideUp">
-            {snippets.map((snip: any, index: number) => (
+            {items.map((item, index) => (
               <div
-                key={snip._id}
+                key={item._id}
                 className="glass-card"
+                onClick={() => setDetail(item)}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  animationDelay: `${index * 0.1}s`
+                  animationDelay: `${index * 0.1}s`,
+                  cursor: 'pointer',
                 }}
               >
-                <div style={{ marginBottom: '1rem' }}>
-                  <span style={{
-                    fontSize: '0.75rem',
-                    color: 'var(--text-tertiary)'
-                  }}>
-                    {new Date(snip.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </span>
-                </div>
-
-                <h3 style={{
-                  fontSize: '1.25rem',
-                  marginBottom: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
-                  lineHeight: 1.3
-                }}>
-                  {snip.title}
-                </h3>
-
-                <p style={{
-                  color: 'var(--text-secondary)',
-                  fontSize: '0.9rem',
-                  marginBottom: '1.5rem',
-                  lineHeight: 1.6,
-                  flex: 1,
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden'
-                }}>
-                  {snip.description}
-                </p>
-
-                {snip.tags && snip.tags.length > 0 && (
-                  <div style={{
-                    display: 'flex',
-                    gap: '0.5rem',
-                    flexWrap: 'wrap',
-                    marginBottom: '1rem'
-                  }}>
-                    {snip.tags.slice(0, 3).map((tag: string, i: number) => (
-                      <span key={i} className="badge" style={{ fontSize: '0.7rem' }}>
-                        {tag}
+                {item.kind === 'project' ? (
+                  <>
+                    <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                        {new Date(item.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
                       </span>
-                    ))}
-                  </div>
-                )}
+                      <span className="badge badge-primary" style={{ fontSize: '0.65rem' }}>project</span>
+                    </div>
 
+                    <h3 style={{
+                      fontSize: '1.25rem',
+                      marginBottom: '0.75rem',
+                      fontWeight: 600,
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.3
+                    }}>
+                      {item.title}
+                    </h3>
 
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <Link
-                    href={`/project/${snip._id}`}
-                    className="btn btn-ghost"
-                    style={{
-                      padding: '0.625rem 1rem',
-                      fontSize: '0.875rem',
+                    <p style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '0.9rem',
+                      marginBottom: '1.5rem',
+                      lineHeight: 1.6,
                       flex: 1,
-                      justifyContent: 'center'
-                    }}
-                  >
-                    View Project
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </Link>
-                  {snip.downloadUrl && (
-                    <a
-                      href={snip.downloadUrl}
-                      download
-                      className="btn btn-secondary"
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden'
+                    }}>
+                      {item.description}
+                    </p>
+
+                    {item.tags && item.tags.length > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        flexWrap: 'wrap',
+                        marginBottom: '1rem'
+                      }}>
+                        {item.tags.slice(0, 3).map((tag: string, i: number) => (
+                          <span key={i} className="badge" style={{ fontSize: '0.7rem' }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <Link
+                        href={`/project/${item._id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="btn btn-ghost"
+                        style={{
+                          padding: '0.625rem 1rem',
+                          fontSize: '0.875rem',
+                          flex: 1,
+                          justifyContent: 'center'
+                        }}
+                      >
+                        View Project
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                          <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                      </Link>
+                      {item.downloadUrl && (
+                        <a
+                          href={item.downloadUrl}
+                          download
+                          onClick={(e) => e.stopPropagation()}
+                          className="btn btn-secondary"
+                          style={{
+                            padding: '0.625rem 1rem',
+                            fontSize: '0.875rem'
+                          }}
+                          title="Download ZIP"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
                       style={{
-                        padding: '0.625rem 1rem',
-                        fontSize: '0.875rem'
+                        width: '100%',
+                        height: '140px',
+                        borderRadius: 'var(--radius-md)',
+                        background: 'var(--bg-tertiary)',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
                       }}
-                      title="Download ZIP"
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
+                      {item.fileType === 'image' ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.thumbnailUrl || item.fileUrl}
+                          alt={item.originalName}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '2.5rem' }}>🗜️</span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                        {new Date(item.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </span>
+                      <span className="badge" style={{ fontSize: '0.65rem' }}>file</span>
+                    </div>
+
+                    <h3
+                      title={item.originalName}
+                      style={{
+                        fontSize: '1.05rem',
+                        marginBottom: '0.75rem',
+                        fontWeight: 600,
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.3,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1,
+                      }}
+                    >
+                      {item.originalName}
+                    </h3>
+
+                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                      <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>{item.fileType}</span>
+                      {typeof item.fileSize === 'number' && (
+                        <span className="badge" style={{ fontSize: '0.7rem' }}>{formatSize(item.fileSize)}</span>
+                      )}
+                    </div>
+
+                    <a
+                      href={`/api/files/${item._id}/download`}
+                      download={item.originalName}
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', textAlign: 'center' }}
+                    >
+                      Download
                     </a>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
         )}
       </section>
+
+      {detail && (
+        <DetailModal item={detail as DetailItem} onClose={() => setDetail(null)} />
+      )}
 
       {/* Footer */}
       <footer style={{
@@ -400,7 +550,7 @@ export default function Home() {
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text'
               }}>
-                Codex
+                nova-browser
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
                 Premium gateway to legendary source code.
@@ -425,6 +575,12 @@ export default function Home() {
                 <Link href="/docs" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Documentation
                 </Link>
+                <Link href="/files" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Files
+                </Link>
+                <Link href="/support" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Support
+                </Link>
                 <Link href="/login" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Staff Login
                 </Link>
@@ -439,7 +595,7 @@ export default function Home() {
             color: 'var(--text-tertiary)',
             fontSize: '0.875rem'
           }}>
-            © {new Date().getFullYear()} Codex. All rights reserved.
+            © {new Date().getFullYear()} nova-browser. All rights reserved.
           </div>
         </div>
       </footer>

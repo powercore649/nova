@@ -9,6 +9,9 @@ export default function CDNDashboard() {
     const [uploading, setUploading] = useState(false);
     const [filter, setFilter] = useState<'all' | 'image' | 'zip'>('all');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [editingFile, setEditingFile] = useState<any | null>(null);
+    const [editYoutubeUrl, setEditYoutubeUrl] = useState('');
+    const [savingEdit, setSavingEdit] = useState(false);
 
     useEffect(() => {
         fetchFiles();
@@ -89,6 +92,33 @@ export default function CDNDashboard() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
+    const openEdit = (file: any) => {
+        setEditingFile(file);
+        setEditYoutubeUrl(file.youtubeUrl || '');
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editingFile) return;
+        setSavingEdit(true);
+        try {
+            const res = await fetch(`/api/files/${editingFile._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ youtubeUrl: editYoutubeUrl }),
+            });
+            if (res.ok) {
+                await fetchFiles();
+                setEditingFile(null);
+            } else {
+                alert('Failed to save tutorial URL');
+            }
+        } catch (error) {
+            alert('Error saving tutorial URL');
+        } finally {
+            setSavingEdit(false);
+        }
+    };
+
     const filteredFiles = files.filter(f => filter === 'all' || f.fileType === filter);
     const totalSize = files.reduce((acc, f) => acc + f.fileSize, 0);
     const totalDownloads = files.reduce((acc, f) => acc + f.downloads, 0);
@@ -138,8 +168,8 @@ export default function CDNDashboard() {
                 marginBottom: '2rem'
             }}>
                 <div className="glass-card-static" style={{
-                    background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(56, 189, 248, 0.05))',
-                    borderColor: 'rgba(56, 189, 248, 0.2)'
+                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
+                    borderColor: 'rgba(34, 197, 94, 0.2)'
                 }}>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Total Files
@@ -150,8 +180,8 @@ export default function CDNDashboard() {
                 </div>
 
                 <div className="glass-card-static" style={{
-                    background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.1), rgba(192, 132, 252, 0.05))',
-                    borderColor: 'rgba(192, 132, 252, 0.2)'
+                    background: 'linear-gradient(135deg, rgba(21, 128, 61, 0.15), rgba(21, 128, 61, 0.05))',
+                    borderColor: 'rgba(21, 128, 61, 0.3)'
                 }}>
                     <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Storage Used
@@ -323,6 +353,21 @@ export default function CDNDashboard() {
                                     )}
                                 </button>
                                 <button
+                                    onClick={() => openEdit(file)}
+                                    className="btn-icon"
+                                    style={{ padding: '0.625rem', position: 'relative' }}
+                                    title={file.youtubeUrl ? 'Edit tutorial URL (set)' : 'Add tutorial URL'}
+                                >
+                                    📺
+                                    {file.youtubeUrl && (
+                                        <span style={{
+                                            position: 'absolute', top: '2px', right: '2px',
+                                            width: '8px', height: '8px', borderRadius: '50%',
+                                            background: 'var(--accent-success, #4ade80)',
+                                        }} />
+                                    )}
+                                </button>
+                                <button
                                     onClick={() => handleDelete(file._id)}
                                     className="btn-icon"
                                     style={{ padding: '0.625rem' }}
@@ -336,6 +381,55 @@ export default function CDNDashboard() {
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {editingFile && (
+                <div
+                    onClick={() => setEditingFile(null)}
+                    style={{
+                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+                        backdropFilter: 'var(--glass-blur-heavy, blur(12px))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        zIndex: 200, padding: '1.5rem',
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="glass-card"
+                        style={{ width: '100%', maxWidth: '480px', padding: '1.75rem' }}
+                    >
+                        <h3 style={{ fontSize: '1.25rem', marginBottom: '0.4rem' }}>📺 Tutorial video</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {editingFile.originalName}
+                        </p>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>YouTube Tutorial URL</label>
+                        <input
+                            type="text"
+                            className="glass-card"
+                            style={{ width: '100%', padding: '0.75rem', color: 'white', background: 'rgba(0,0,0,0.2)', outline: 'none', marginBottom: '1.25rem' }}
+                            value={editYoutubeUrl}
+                            onChange={e => setEditYoutubeUrl(e.target.value)}
+                            placeholder="https://youtube.com/watch?v=... or leave empty to remove"
+                        />
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button
+                                onClick={handleSaveEdit}
+                                disabled={savingEdit}
+                                className="btn btn-primary"
+                                style={{ flex: 1, padding: '0.75rem', justifyContent: 'center' }}
+                            >
+                                {savingEdit ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                                onClick={() => setEditingFile(null)}
+                                className="btn btn-ghost"
+                                style={{ flex: 1, padding: '0.75rem', justifyContent: 'center' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </main>

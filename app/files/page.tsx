@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import DetailModal, { DetailItem } from '@/components/DetailModal';
 
 interface FileItem {
     _id: string;
@@ -12,6 +13,7 @@ interface FileItem {
     mimeType: string;
     fileSize: number;
     thumbnailUrl?: string;
+    youtubeUrl?: string;
     uploadedBy: string;
     downloads: number;
     createdAt: string;
@@ -37,7 +39,7 @@ export default function FilesPage() {
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [typeFilter, setTypeFilter] = useState<'all' | 'image' | 'zip'>('all');
-    const [preview, setPreview] = useState<FileItem | null>(null);
+    const [detail, setDetail] = useState<FileItem | null>(null);
 
     useEffect(() => {
         async function load() {
@@ -130,10 +132,14 @@ export default function FilesPage() {
             {!loading && !error && filtered.length > 0 && (
                 <div className="grid grid-cols-3">
                     {filtered.map((file) => (
-                        <div key={file._id} className="glass-card" style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div
+                            key={file._id}
+                            className="glass-card"
+                            onClick={() => setDetail(file)}
+                            style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                        >
                             {/* Thumbnail */}
                             <div
-                                onClick={() => file.fileType === 'image' && setPreview(file)}
                                 style={{
                                     width: '100%',
                                     height: '150px',
@@ -144,7 +150,6 @@ export default function FilesPage() {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     overflow: 'hidden',
-                                    cursor: file.fileType === 'image' ? 'pointer' : 'default',
                                 }}
                             >
                                 {file.fileType === 'image' ? (
@@ -191,6 +196,7 @@ export default function FilesPage() {
                             <a
                                 href={`/api/files/${file._id}/download`}
                                 download={file.originalName}
+                                onClick={(e) => e.stopPropagation()}
                                 className="btn btn-secondary"
                                 style={{ marginTop: 'auto', fontSize: '0.85rem', padding: '0.6rem 1rem' }}
                             >
@@ -201,35 +207,11 @@ export default function FilesPage() {
                 </div>
             )}
 
-            {/* Lightbox */}
-            {preview && (
-                <div
-                    onClick={() => setPreview(null)}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0, 0, 0, 0.85)',
-                        backdropFilter: 'var(--glass-blur-heavy)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 100,
-                        padding: '2rem',
-                        cursor: 'zoom-out',
-                    }}
-                >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                        src={preview.fileUrl}
-                        alt={preview.originalName}
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '85vh',
-                            borderRadius: 'var(--radius-lg)',
-                            boxShadow: 'var(--shadow-lg)',
-                        }}
-                    />
-                </div>
+            {detail && (
+                <DetailModal
+                    item={{ ...detail, kind: 'file' } as DetailItem}
+                    onClose={() => setDetail(null)}
+                />
             )}
         </main>
     );

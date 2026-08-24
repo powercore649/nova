@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     if (!file) {
         return {
-            title: 'File Not Found - Codex CDN',
+            title: 'File Not Found - nova-browser CDN',
         };
     }
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
         title: file.originalName,
-        description: `${(file.fileSize / 1024).toFixed(1)}KB - Codex CDN`,
+        description: `${(file.fileSize / 1024).toFixed(1)}KB - nova-browser CDN`,
         openGraph: {
             title: file.originalName,
             description: `${(file.fileSize / 1024).toFixed(1)}KB`,
@@ -199,7 +199,7 @@ export default async function CDNFilePage({ params }: { params: Promise<{ id: st
                         </svg>
                         <div>
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                                Hosted by Codex CDN
+                                Hosted by nova-browser CDN
                             </h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                 This file is securely hosted and available for direct download. Share this link anywhere!

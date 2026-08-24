@@ -1,9 +1,9 @@
-# CodexDev
+# nova-browserDev
 
-**CodexDev** is a premium, high-performance code sharing and publishing platform designed for teams and developers. It transforms raw HTML into beautiful, auto-themed webpages and provides a centralized repository for your organization's most valuable code assets.
+**nova-browserDev** is a premium, high-performance code sharing and publishing platform designed for teams and developers. It transforms raw HTML into beautiful, auto-themed webpages and provides a centralized repository for your organization's most valuable code assets.
 
 
-![CodexDev Banner](https://i.ibb.co/39MmWh7Y/image.png)
+![nova-browserDev Banner](https://i.ibb.co/39MmWh7Y/image.png)
 
 
 ## 🚀 Features
@@ -29,8 +29,8 @@
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/devrock07/CodexDev.git
-cd CodexDev
+git clone https://github.com/devrock07/nova-browserDev.git
+cd nova-browserDev
 npm install
 ```
 
@@ -65,7 +65,7 @@ This project is optimized for deployment on **Netlify** or **Vercel**.
 
 ## 🫡 Credits & Authors
 
-**Made with ❤️ by [devrock07](https://github.com/devrock07)** for **CodexDev**.
+**Made with ❤️ by [devrock07](https://github.com/devrock07)** for **nova-browserDev**.
 
 ---
-*© 2025 CodexDev. All rights reserved.*
+*© 2025 nova-browserDev. All rights reserved.*

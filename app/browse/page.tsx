@@ -2,51 +2,93 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import DetailModal, { DetailItem } from '@/components/DetailModal';
+
+interface BrowseItem {
+    _id: string;
+    kind: 'project' | 'file';
+    createdAt: string;
+    // project fields
+    title?: string;
+    description?: string;
+    language?: string;
+    tags?: string[];
+    downloadUrl?: string;
+    // file fields
+    originalName?: string;
+    fileType?: 'image' | 'zip';
+    fileUrl?: string;
+    thumbnailUrl?: string;
+    fileSize?: number;
+    // shared
+    youtubeUrl?: string;
+}
+
+function formatSize(bytes?: number) {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function BrowsePage() {
-    const [snippets, setSnippets] = useState([]);
-    const [filteredSnippets, setFilteredSnippets] = useState([]);
+    const [items, setItems] = useState<BrowseItem[]>([]);
+    const [filtered, setFiltered] = useState<BrowseItem[]>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
     const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+    const [typeFilter, setTypeFilter] = useState<'all' | 'project' | 'file'>('all');
+    const [detail, setDetail] = useState<BrowseItem | null>(null);
 
     useEffect(() => {
-        // Fetch all snippets
-        fetch('/api/snippets')
-            .then(res => res.json())
-            .then(data => {
-                if (data.snippets) {
-                    setSnippets(data.snippets);
-                    setFilteredSnippets(data.snippets);
+        Promise.all([
+            fetch('/api/snippets').then(res => res.json()).catch(() => ({ snippets: [] })),
+            fetch('/api/files').then(res => res.json()).catch(() => ({ files: [] })),
+        ]).then(([snippetsData, filesData]) => {
+            const projects: BrowseItem[] = (snippetsData.snippets || []).map((s: any) => ({
+                ...s,
+                kind: 'project' as const,
+            }));
+            const files: BrowseItem[] = (filesData.files || []).map((f: any) => ({
+                ...f,
+                kind: 'file' as const,
+            }));
 
-                    // Extract unique languages
-                    const languages = Array.from(new Set(
-                        data.snippets.map((s: any) => s.language).filter(Boolean)
-                    )) as string[];
-                    setAvailableLanguages(languages);
-                }
-                setLoading(false);
-            })
-            .catch(err => setLoading(false));
+            const merged = [...projects, ...files].sort(
+                (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            setItems(merged);
+            setFiltered(merged);
+
+            const languages = Array.from(new Set(
+                projects.map((s) => s.language).filter(Boolean)
+            )) as string[];
+            setAvailableLanguages(languages);
+
+            setLoading(false);
+        }).catch(() => setLoading(false));
     }, []);
 
     useEffect(() => {
-        if (!snippets.length) return;
+        if (!items.length) return;
         const lowerSearch = search.toLowerCase();
-        const filtered = snippets.filter((s: any) => {
+        const result = items.filter((item) => {
+            const label = item.kind === 'project' ? item.title : item.originalName;
             const matchesSearch = !search ||
-                s.title.toLowerCase().includes(lowerSearch) ||
-                s.description.toLowerCase().includes(lowerSearch) ||
-                s.tags?.some((t: string) => t.toLowerCase().includes(lowerSearch)) ||
-                s.language?.toLowerCase().includes(lowerSearch);
+                label?.toLowerCase().includes(lowerSearch) ||
+                item.description?.toLowerCase().includes(lowerSearch) ||
+                item.tags?.some((t) => t.toLowerCase().includes(lowerSearch)) ||
+                item.language?.toLowerCase().includes(lowerSearch);
 
-            const matchesLanguage = !selectedLanguage || s.language === selectedLanguage;
+            const matchesLanguage = !selectedLanguage || item.language === selectedLanguage;
+            const matchesType = typeFilter === 'all' || item.kind === typeFilter;
 
-            return matchesSearch && matchesLanguage;
+            return matchesSearch && matchesLanguage && matchesType;
         });
-        setFilteredSnippets(filtered);
-    }, [search, snippets, selectedLanguage]);
+        setFiltered(result);
+    }, [search, items, selectedLanguage, typeFilter]);
 
     return (
         <main style={{ minHeight: '100vh', paddingBottom: '4rem' }}>
@@ -85,9 +127,23 @@ export default function BrowsePage() {
                             Browse <span className="gradient-text">Library</span>
                         </h1>
                         <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>
-                            Explore {snippets.length} premium code projects
+                            Explore {items.length} premium projects and files
                         </p>
                     </div>
+                </div>
+
+                {/* Type filter */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    {(['all', 'project', 'file'] as const).map((t) => (
+                        <button
+                            key={t}
+                            onClick={() => setTypeFilter(t)}
+                            className={typeFilter === t ? 'btn btn-primary' : 'btn btn-ghost'}
+                            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        >
+                            {t === 'all' ? 'All' : t === 'project' ? 'Projects' : 'Files'}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Search Bar */}
@@ -116,7 +172,7 @@ export default function BrowsePage() {
                         }}
                         onFocus={(e) => {
                             e.target.style.borderColor = 'var(--accent-primary)';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(56, 189, 248, 0.1)';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(34, 197, 94, 0.1)';
                         }}
                         onBlur={(e) => {
                             e.target.style.borderColor = 'var(--card-border)';
@@ -151,8 +207,6 @@ export default function BrowsePage() {
                         </button>
                     )}
                 </div>
-
-
             </div>
 
             {/* Results */}
@@ -168,23 +222,24 @@ export default function BrowsePage() {
                             </div>
                         ))}
                     </div>
-                ) : filteredSnippets.length === 0 ? (
+                ) : filtered.length === 0 ? (
                     <div className="glass-card" style={{
                         textAlign: 'center',
                         padding: '4rem 2rem'
                     }}>
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
                         <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
-                            No Projects Found
+                            No Results Found
                         </h3>
                         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
                             {search ? `No results for "${search}"` : 'Try adjusting your filters'}
                         </p>
-                        {(search || selectedLanguage) && (
+                        {(search || selectedLanguage || typeFilter !== 'all') && (
                             <button
                                 onClick={() => {
                                     setSearch('');
                                     setSelectedLanguage(null);
+                                    setTypeFilter('all');
                                 }}
                                 className="btn btn-primary"
                             >
@@ -199,28 +254,28 @@ export default function BrowsePage() {
                             color: 'var(--text-secondary)',
                             fontSize: '0.9rem'
                         }}>
-                            Showing {filteredSnippets.length} {filteredSnippets.length === 1 ? 'project' : 'projects'}
+                            Showing {filtered.length} {filtered.length === 1 ? 'result' : 'results'}
                         </div>
                         <div className="grid grid-cols-3 animate-fadeIn">
-                            {filteredSnippets.map((snip: any, index: number) => (
+                            {filtered.map((item, index) => (
                                 <div
-                                    key={snip._id}
+                                    key={item._id}
                                     className="glass-card"
+                                    onClick={() => setDetail(item)}
                                     style={{
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        animationDelay: `${index * 0.05}s`
+                                        animationDelay: `${index * 0.05}s`,
+                                        cursor: 'pointer',
                                     }}
                                 >
-                                    <div style={{ marginBottom: '1rem' }}>
-                                        <span style={{
-                                            fontSize: '0.75rem',
-                                            color: 'var(--text-tertiary)'
-                                        }}>
-                                            {new Date(snip.createdAt).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric'
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <span className="badge" style={{ fontSize: '0.7rem' }}>
+                                            {item.kind === 'project' ? (item.language || 'project') : item.fileType}
+                                        </span>
+                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                                            {new Date(item.createdAt).toLocaleDateString('en-US', {
+                                                month: 'short', day: 'numeric', year: 'numeric',
                                             })}
                                         </span>
                                     </div>
@@ -229,79 +284,83 @@ export default function BrowsePage() {
                                         fontSize: '1.25rem',
                                         marginBottom: '0.75rem',
                                         fontWeight: 600,
-                                        lineHeight: 1.3
+                                        lineHeight: 1.3,
                                     }}>
-                                        {snip.title}
+                                        {item.kind === 'project' ? item.title : item.originalName}
                                     </h3>
 
-                                    <p style={{
-                                        color: 'var(--text-secondary)',
-                                        fontSize: '0.9rem',
-                                        marginBottom: '1.5rem',
-                                        lineHeight: 1.6,
-                                        flex: 1,
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 3,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden'
-                                    }}>
-                                        {snip.description}
-                                    </p>
-
-                                    {snip.tags && snip.tags.length > 0 && (
-                                        <div style={{
-                                            display: 'flex',
-                                            gap: '0.5rem',
-                                            flexWrap: 'wrap',
-                                            marginBottom: '1rem'
+                                    {item.kind === 'project' ? (
+                                        <p style={{
+                                            color: 'var(--text-secondary)',
+                                            fontSize: '0.9rem',
+                                            marginBottom: '1.5rem',
+                                            lineHeight: 1.6,
+                                            flex: 1,
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 3,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
                                         }}>
-                                            {snip.tags.slice(0, 3).map((tag: string, i: number) => (
-                                                <span key={i} className="badge" style={{ fontSize: '0.7rem' }}>
-                                                    {tag}
-                                                </span>
+                                            {item.description}
+                                        </p>
+                                    ) : (
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem', flex: 1 }}>
+                                            {formatSize(item.fileSize)}
+                                        </p>
+                                    )}
+
+                                    {item.kind === 'project' && item.tags && item.tags.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                                            {item.tags.slice(0, 3).map((tag, i) => (
+                                                <span key={i} className="badge" style={{ fontSize: '0.7rem' }}>{tag}</span>
                                             ))}
-                                            {snip.tags.length > 3 && (
-                                                <span className="badge" style={{ fontSize: '0.7rem' }}>
-                                                    +{snip.tags.length - 3}
-                                                </span>
+                                            {item.tags.length > 3 && (
+                                                <span className="badge" style={{ fontSize: '0.7rem' }}>+{item.tags.length - 3}</span>
                                             )}
                                         </div>
                                     )}
 
-
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <Link
-                                            href={`/project/${snip._id}`}
-                                            className="btn btn-ghost"
-                                            style={{
-                                                padding: '0.625rem 1rem',
-                                                fontSize: '0.875rem',
-                                                flex: 1,
-                                                justifyContent: 'center'
-                                            }}
-                                        >
-                                            View Project
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                <polyline points="12 5 19 12 12 19"></polyline>
-                                            </svg>
-                                        </Link>
-                                        {snip.downloadUrl && (
+                                        {item.kind === 'project' ? (
+                                            <>
+                                                <Link
+                                                    href={`/project/${item._id}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="btn btn-ghost"
+                                                    style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', flex: 1, justifyContent: 'center' }}
+                                                >
+                                                    View Project
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                                    </svg>
+                                                </Link>
+                                                {item.downloadUrl && (
+                                                    <a
+                                                        href={item.downloadUrl}
+                                                        download
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="btn btn-secondary"
+                                                        style={{ padding: '0.625rem 1rem', fontSize: '0.875rem' }}
+                                                        title="Download ZIP"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                        </svg>
+                                                    </a>
+                                                )}
+                                            </>
+                                        ) : (
                                             <a
-                                                href={snip.downloadUrl}
-                                                download
+                                                href={`/api/files/${item._id}/download`}
+                                                download={item.originalName}
+                                                onClick={(e) => e.stopPropagation()}
                                                 className="btn btn-secondary"
-                                                style={{
-                                                    padding: '0.625rem 1rem',
-                                                    fontSize: '0.875rem'
-                                                }}
-                                                title="Download ZIP"
+                                                style={{ padding: '0.625rem 1rem', fontSize: '0.875rem', flex: 1, textAlign: 'center' }}
                                             >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                                </svg>
+                                                Download
                                             </a>
                                         )}
                                     </div>
@@ -311,6 +370,10 @@ export default function BrowsePage() {
                     </>
                 )}
             </div>
+
+            {detail && (
+                <DetailModal item={detail as DetailItem} onClose={() => setDetail(null)} />
+            )}
         </main>
     );
 }

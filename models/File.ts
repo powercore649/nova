@@ -8,6 +8,7 @@ export interface IFile extends Document {
     mimeType: string;
     fileSize: number;
     thumbnailUrl?: string;
+    youtubeUrl?: string;
     uploadedBy: string;
     downloads: number;
     createdAt: Date;
@@ -23,6 +24,7 @@ const FileSchema: Schema = new Schema(
         mimeType: { type: String, required: true },
         fileSize: { type: Number, required: true },
         thumbnailUrl: { type: String, default: '' },
+        youtubeUrl: { type: String, default: '' },
         uploadedBy: { type: String, default: 'admin' },
         downloads: { type: Number, default: 0 },
     },
@@ -30,6 +32,6 @@ const FileSchema: Schema = new Schema(
 );
 
 // Check if model already exists to prevent overwrite error in hot reload
-const File: Model<IFile> = mongoose.models.File || mongoose.model<IFile>('File', FileSchema, 'codex_files');
+const File: Model<IFile> = mongoose.models.File || mongoose.model<IFile>('File', FileSchema, 'nova-browser_files');
 
 export default File;
