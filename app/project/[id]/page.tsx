@@ -31,7 +31,11 @@ export async function generateMetadata(
         openGraph: {
             title: project.title,
             description: project.description,
+<<<<<<< HEAD
             siteName: 'Codex CDN',
+=======
+            siteName: 'nova-browser CDN',
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
             type: 'website',
         }
     }
@@ -49,6 +53,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     // We inject the premium theme CSS so the user's content looks like the site
     const themeCSS = `
     <style>
+<<<<<<< HEAD
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
         
         :root {
@@ -59,13 +64,29 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --glass-bg: rgba(30, 41, 59, 0.7);
+=======
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-secondary: #131813;
+            --accent-primary: #22c55e;
+            --accent-secondary: #4ade80;
+            --text-primary: #f2f5f2;
+            --text-secondary: #a3b8ab;
+            --glass-bg: rgba(19, 24, 19, 0.7);
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
         body { 
             margin: 0; 
             padding: 2rem; 
+<<<<<<< HEAD
             font-family: 'Outfit', sans-serif; 
+=======
+            font-family: 'JetBrains Mono', monospace; 
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
             background: linear-gradient(135deg, var(--bg-dark), #000000); 
             color: var(--text-primary);
             min-height: 100vh;

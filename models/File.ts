@@ -30,6 +30,10 @@ const FileSchema: Schema = new Schema(
 );
 
 // Check if model already exists to prevent overwrite error in hot reload
+<<<<<<< HEAD
 const File: Model<IFile> = mongoose.models.File || mongoose.model<IFile>('File', FileSchema, 'codex_files');
+=======
+const File: Model<IFile> = mongoose.models.File || mongoose.model<IFile>('File', FileSchema, 'nova-browser_files');
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
 
 export default File;

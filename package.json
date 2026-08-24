@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "codex-web",
+=======
+  "name": "nova-browser-web",
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
   "version": "0.1.0",
   "private": true,
   "scripts": {

@@ -17,7 +17,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     if (!file) {
         return {
+<<<<<<< HEAD
             title: 'File Not Found - Codex CDN',
+=======
+            title: 'File Not Found - nova-browser CDN',
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
         };
     }
 
@@ -27,7 +31,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
     return {
         title: file.originalName,
+<<<<<<< HEAD
         description: `${(file.fileSize / 1024).toFixed(1)}KB - Codex CDN`,
+=======
+        description: `${(file.fileSize / 1024).toFixed(1)}KB - nova-browser CDN`,
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
         openGraph: {
             title: file.originalName,
             description: `${(file.fileSize / 1024).toFixed(1)}KB`,
@@ -199,7 +207,11 @@ export default async function CDNFilePage({ params }: { params: Promise<{ id: st
                         </svg>
                         <div>
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+<<<<<<< HEAD
                                 Hosted by Codex CDN
+=======
+                                Hosted by nova-browser CDN
+>>>>>>> 29aed2e9981bab3783c1bfffea7c7f06ccce60ec
                             </h3>
                             <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                                 This file is securely hosted and available for direct download. Share this link anywhere!
