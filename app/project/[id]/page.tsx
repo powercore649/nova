@@ -9,7 +9,12 @@ export const dynamic = 'force-dynamic';
 async function getProject(id: string) {
     try {
         await dbConnect();
-        const project = await Snippet.findById(id).lean();
+        // increment views atomically then return updated doc
+        const project = await Snippet.findByIdAndUpdate(
+            id,
+            { $inc: { views: 1 } },
+            { new: true }
+        ).lean();
         if (!project) return null;
         return project;
     } catch (error) {

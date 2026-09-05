@@ -8,19 +8,16 @@ interface BrowseItem {
     _id: string;
     kind: 'project' | 'file';
     createdAt: string;
-    // project fields
     title?: string;
     description?: string;
     language?: string;
     tags?: string[];
     downloadUrl?: string;
-    // file fields
     originalName?: string;
     fileType?: 'image' | 'zip';
     fileUrl?: string;
     thumbnailUrl?: string;
     fileSize?: number;
-    // shared
     youtubeUrl?: string;
 }
 
@@ -40,6 +37,15 @@ export default function BrowsePage() {
     const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
     const [typeFilter, setTypeFilter] = useState<'all' | 'project' | 'file'>('all');
     const [detail, setDetail] = useState<BrowseItem | null>(null);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    function copyLink(id: string) {
+        const url = `${window.location.origin}/project/${id}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 1800);
+        });
+    }
 
     useEffect(() => {
         Promise.all([
@@ -335,6 +341,23 @@ export default function BrowsePage() {
                                                         <polyline points="12 5 19 12 12 19"></polyline>
                                                     </svg>
                                                 </Link>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); copyLink(item._id); }}
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '0.625rem 0.75rem', fontSize: '0.875rem' }}
+                                                    title="Copy link"
+                                                >
+                                                    {copiedId === item._id ? (
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" strokeWidth="2">
+                                                            <polyline points="20 6 9 17 4 12"/>
+                                                        </svg>
+                                                    ) : (
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                                                        </svg>
+                                                    )}
+                                                </button>
                                                 {item.downloadUrl && (
                                                     <a
                                                         href={item.downloadUrl}

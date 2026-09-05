@@ -8,6 +8,7 @@ export interface ISnippet extends Document {
     tags: string[];
     downloadUrl?: string;
     youtubeUrl?: string;
+    views: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -21,6 +22,7 @@ const SnippetSchema: Schema = new Schema(
         tags: { type: [String], default: [] },
         downloadUrl: { type: String, default: '' },
         youtubeUrl: { type: String, default: '' },
+        views: { type: Number, default: 0 },
     },
     { timestamps: true }
 );

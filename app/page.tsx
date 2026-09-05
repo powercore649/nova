@@ -41,6 +41,26 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [detail, setDetail] = useState<LatestItem | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [popular, setPopular] = useState<LatestItem[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  function copyLink(id: string) {
+    const url = `${window.location.origin}/project/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1800);
+    });
+  }
+
+  useEffect(() => {
+    fetch('/api/leaderboard')
+      .then(r => r.json())
+      .then(d => {
+        const top3 = (d.projects || []).slice(0, 3).map((p: any) => ({ ...p, kind: 'project' as const }));
+        setPopular(top3);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/stats')
@@ -119,6 +139,12 @@ export default function Home() {
             </Link>
             <Link href="/changelogs" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
               Changelog
+            </Link>
+            <Link href="/leaderboard" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Leaderboard
+            </Link>
+            <Link href="/roadmap" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Roadmap
             </Link>
             <Link href="/bot" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               {/* Discord icon */}
@@ -245,6 +271,20 @@ export default function Home() {
               }}
             >
               Changelog
+            </Link>
+            <Link
+              href="/leaderboard"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontWeight: 500, transition: 'all var(--transition-fast)' }}
+            >
+              Leaderboard
+            </Link>
+            <Link
+              href="/roadmap"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontWeight: 500, transition: 'all var(--transition-fast)' }}
+            >
+              Roadmap
             </Link>
             <Link
               href="/bot"
@@ -520,6 +560,44 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Popular This Week */}
+      {popular.length > 0 && (
+        <section className="container" style={{ paddingBottom: '4rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontFamily: 'var(--font-display)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              🔥 Popular
+            </h2>
+            <Link href="/leaderboard" className="btn btn-ghost" style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}>
+              Full Leaderboard
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </Link>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {popular.map((item, i) => (
+              <div key={item._id} className="glass-card-static" style={{
+                display: 'flex', alignItems: 'center', gap: '1rem',
+                padding: '0.9rem 1.25rem', borderRadius: 'var(--radius-md)', flexWrap: 'wrap',
+              }}>
+                <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{['🥇','🥈','🥉'][i]}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.title}
+                  </div>
+                </div>
+                <span style={{ color: 'var(--accent-primary)', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0 }}>
+                  {(item as any).views ?? 0} views
+                </span>
+                <Link href={`/project/${item._id}`} className="btn btn-ghost" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem', flexShrink: 0 }}>
+                  View
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Projects Grid Section */}
       <section className="container" style={{ paddingBottom: '4rem' }}>
@@ -912,6 +990,12 @@ export default function Home() {
                 </Link>
                 <Link href="/changelogs" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Changelog
+                </Link>
+                <Link href="/leaderboard" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Leaderboard
+                </Link>
+                <Link href="/roadmap" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Roadmap
                 </Link>
                 <Link href="/bot" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Discord Bot
