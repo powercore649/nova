@@ -17,12 +17,13 @@ export async function GET(req: NextRequest) {
 
   try {
     await dbConnect();
-    const comments = await Comment.find({ targetType, targetId })
+    const comments = await Comment.find({ targetType, targetId: String(targetId) })
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
     return NextResponse.json({ comments });
   } catch (error) {
+    console.error('Comment GET error:', error);
     return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 });
   }
 }
@@ -41,6 +42,8 @@ export async function POST(req: NextRequest) {
     }
 
     const displayName = (username?.trim() || 'Anonymous').slice(0, 32);
+    // Ensure targetId is always a plain string
+    const targetIdStr = String(targetId);
 
     // Try to get accountId from JWT, fall back to anonymous
     const auth = await getAuthPayload(req);
@@ -49,7 +52,7 @@ export async function POST(req: NextRequest) {
     await dbConnect();
     const comment = await Comment.create({
       targetType,
-      targetId,
+      targetId: targetIdStr,
       accountId,
       username: displayName,
       text: text.trim(),
@@ -57,6 +60,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to post comment' }, { status: 500 });
+    console.error('Comment POST error:', error);
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to post comment', details: msg }, { status: 500 });
   }
 }

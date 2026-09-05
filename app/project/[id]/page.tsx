@@ -151,7 +151,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <Link href="/" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>&larr; Back</Link>
                     <span style={{ fontWeight: 600 }}>{project.title}</span>
                 </div>
-                <ProjectInteractions projectId={String((project as any)._id)} projectTitle={project.title as string} />
+                <ProjectInteractions projectId={String((project as any)._id.toString ? (project as any)._id.toString() : (project as any)._id)} projectTitle={project.title as string} />
             </nav>
             <iframe
                 srcDoc={previewContent}
