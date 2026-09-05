@@ -128,10 +128,15 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
             const res = await fetch('/api/comments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ targetType, targetId, text: commentText.trim(), username: commentName.trim() || 'Anonymous' }),
+                body: JSON.stringify({
+                    targetType,
+                    targetId,
+                    text: commentText.trim(),
+                    username: commentName.trim() || 'Anonymous',
+                }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || data.details || 'Failed');
+            if (!res.ok) throw new Error(data.details || data.error || 'Failed');
             setComments(prev => [data.comment, ...prev]);
             setCommentText('');
             setCommentMsg('✓ Comment posted');

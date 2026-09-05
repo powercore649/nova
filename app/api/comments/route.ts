@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Comment from '@/models/Comment';
-import { getAuthPayload } from '@/lib/auth-helpers';
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/comments?targetType=project&targetId=xxx
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const targetType = searchParams.get('targetType');
+  const targetType = searchParams.get('targetType') as 'project' | 'file' | null;
   const targetId = searchParams.get('targetId');
 
   if (!targetType || !targetId) {
@@ -17,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   try {
     await dbConnect();
-    const comments = await Comment.find({ targetType, targetId: String(targetId) })
+    const comments = await Comment.find({ targetType, targetId })
       .sort({ createdAt: -1 })
       .limit(100)
       .lean();
@@ -28,40 +27,46 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST /api/comments — public (no auth required, username from body)
+// POST /api/comments — fully public, no auth required
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { targetType, targetId, text, username } = body;
 
-    if (!targetType || !targetId || !text?.trim()) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!targetType || !targetId) {
+      return NextResponse.json({ error: 'Missing targetType or targetId' }, { status: 400 });
     }
-    if (text.trim().length > 1000) {
+    if (!text || !String(text).trim()) {
+      return NextResponse.json({ error: 'Comment text is required' }, { status: 400 });
+    }
+    if (String(text).trim().length > 1000) {
       return NextResponse.json({ error: 'Comment too long (max 1000 chars)' }, { status: 400 });
     }
+    if (!['project', 'file'].includes(targetType)) {
+      return NextResponse.json({ error: 'Invalid targetType' }, { status: 400 });
+    }
 
-    const displayName = (username?.trim() || 'Anonymous').slice(0, 32);
-    // Ensure targetId is always a plain string
+    const displayName = String(username || '').trim().slice(0, 32) || 'Anonymous';
     const targetIdStr = String(targetId);
-
-    // Try to get accountId from JWT, fall back to anonymous
-    const auth = await getAuthPayload(req);
-    const accountId = auth?.userId || `anon-${Date.now()}`;
+    const accountId = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
     await dbConnect();
+
     const comment = await Comment.create({
-      targetType,
+      targetType: String(targetType),
       targetId: targetIdStr,
       accountId,
       username: displayName,
-      text: text.trim(),
+      text: String(text).trim(),
     });
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {
     console.error('Comment POST error:', error);
-    const msg = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: 'Failed to post comment', details: msg }, { status: 500 });
+    const details = error instanceof Error ? error.message : String(error);
+    return NextResponse.json(
+      { error: 'Failed to post comment', details },
+      { status: 500 }
+    );
   }
 }
