@@ -117,6 +117,9 @@ export default function Home() {
             <Link href="/support" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
               Support
             </Link>
+            <Link href="/changelogs" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Changelog
+            </Link>
             <Link href="/bot" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               {/* Discord icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -229,6 +232,19 @@ export default function Home() {
               }}
             >
               Support
+            </Link>
+            <Link
+              href="/changelogs"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--text-secondary)',
+                fontWeight: 500,
+                transition: 'all var(--transition-fast)'
+              }}
+            >
+              Changelog
             </Link>
             <Link
               href="/bot"
@@ -893,6 +909,9 @@ export default function Home() {
                 </Link>
                 <Link href="/support" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Support
+                </Link>
+                <Link href="/changelogs" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Changelog
                 </Link>
                 <Link href="/bot" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Discord Bot

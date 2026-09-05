@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
-import { useUploadThing } from '@/lib/uploadthing';
 
 export default function Dashboard() {
     const [snippets, setSnippets] = useState<any[]>([]);
@@ -17,7 +16,27 @@ export default function Dashboard() {
     const [bgMsg, setBgMsg] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { startUpload } = useUploadThing('backgroundUploader');
+    async function handleBgUpload(file: File) {
+        setBgUploading(true);
+        setBgMsg('');
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await fetch('/api/settings/background', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Upload failed');
+            setCurrentBg(data.backgroundUrl);
+            setBgPreview('');
+            setBgMsg('✓ Background updated successfully');
+        } catch (err: any) {
+            setBgMsg(`✗ ${err.message ?? 'Upload failed. Please try again.'}`);
+        } finally {
+            setBgUploading(false);
+        }
+    }
 
     useEffect(() => {
         fetch('/api/snippets')
@@ -37,31 +56,6 @@ export default function Dashboard() {
             })
             .catch(() => {});
     }, []);
-
-    async function handleBgUpload(file: File) {
-        setBgUploading(true);
-        setBgMsg('');
-        try {
-            const res = await startUpload([file]);
-            if (!res?.[0]?.url) throw new Error('Upload failed');
-            const url = res[0].url;
-            // Save to settings
-            setBgSaving(true);
-            await fetch('/api/settings', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ backgroundUrl: url, backgroundOpacity: bgOpacity }),
-            });
-            setCurrentBg(url);
-            setBgPreview('');
-            setBgMsg('✓ Background updated successfully');
-        } catch {
-            setBgMsg('✗ Upload failed. Please try again.');
-        } finally {
-            setBgUploading(false);
-            setBgSaving(false);
-        }
-    }
 
     async function handleOpacitySave() {
         setBgSaving(true);
