@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 
 interface Project {
+  _id: string;
   title: string;
   description: string;
   language: string;
