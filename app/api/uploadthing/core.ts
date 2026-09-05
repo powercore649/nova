@@ -33,6 +33,15 @@ const auth = async () => {
 
 // FileRouter for your app
 export const ourFileRouter = {
+    // Background image uploader (staff only, single image up to 8MB)
+    backgroundUploader: f({ image: { maxFileSize: '8MB', maxFileCount: 1 } })
+        .middleware(async () => await auth())
+        .onUploadComplete(async ({ metadata, file }) => {
+            console.log('Background upload complete for userId:', metadata.userId);
+            console.log('File URL:', file.url);
+            return { uploadedBy: metadata.userId, fileUrl: file.url };
+        }),
+
     // Image uploader
     imageUploader: f({
         image: {

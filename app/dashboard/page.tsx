@@ -1,26 +1,103 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useUploadThing } from '@/lib/uploadthing';
 
 export default function Dashboard() {
     const [snippets, setSnippets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Background state
+    const [currentBg, setCurrentBg] = useState('');
+    const [bgOpacity, setBgOpacity] = useState(0.15);
+    const [bgPreview, setBgPreview] = useState('');
+    const [bgUploading, setBgUploading] = useState(false);
+    const [bgSaving, setBgSaving] = useState(false);
+    const [bgMsg, setBgMsg] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const { startUpload } = useUploadThing('backgroundUploader');
+
     useEffect(() => {
         fetch('/api/snippets')
             .then(res => res.json())
             .then(data => {
-                if (data.snippets) {
-                    setSnippets(data.snippets);
-                }
+                if (data.snippets) setSnippets(data.snippets);
                 setLoading(false);
             })
-            .catch(err => {
-                console.error('Failed to fetch snippets:', err);
-                setLoading(false);
-            });
+            .catch(() => setLoading(false));
+
+        // Load current background settings
+        fetch('/api/settings')
+            .then(res => res.json())
+            .then(data => {
+                if (data?.settings?.backgroundUrl) setCurrentBg(data.settings.backgroundUrl);
+                if (typeof data?.settings?.backgroundOpacity === 'number') setBgOpacity(data.settings.backgroundOpacity);
+            })
+            .catch(() => {});
     }, []);
+
+    async function handleBgUpload(file: File) {
+        setBgUploading(true);
+        setBgMsg('');
+        try {
+            const res = await startUpload([file]);
+            if (!res?.[0]?.url) throw new Error('Upload failed');
+            const url = res[0].url;
+            // Save to settings
+            setBgSaving(true);
+            await fetch('/api/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ backgroundUrl: url, backgroundOpacity: bgOpacity }),
+            });
+            setCurrentBg(url);
+            setBgPreview('');
+            setBgMsg('✓ Background updated successfully');
+        } catch {
+            setBgMsg('✗ Upload failed. Please try again.');
+        } finally {
+            setBgUploading(false);
+            setBgSaving(false);
+        }
+    }
+
+    async function handleOpacitySave() {
+        setBgSaving(true);
+        setBgMsg('');
+        try {
+            await fetch('/api/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ backgroundOpacity: bgOpacity }),
+            });
+            setBgMsg('✓ Opacity saved');
+        } catch {
+            setBgMsg('✗ Failed to save opacity');
+        } finally {
+            setBgSaving(false);
+        }
+    }
+
+    async function handleRemoveBg() {
+        setBgSaving(true);
+        setBgMsg('');
+        try {
+            await fetch('/api/settings', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ backgroundUrl: '' }),
+            });
+            setCurrentBg('');
+            setBgPreview('');
+            setBgMsg('✓ Background removed');
+        } catch {
+            setBgMsg('✗ Failed to remove background');
+        } finally {
+            setBgSaving(false);
+        }
+    }
 
     const totalProjects = snippets.length;
     const recentProjects = snippets.slice(0, 5);
@@ -151,6 +228,168 @@ export default function Dashboard() {
                         fontFamily: 'var(--font-display)'
                     }}>
                         Active
+                    </div>
+                </div>
+            </div>
+
+            {/* Background Image Section */}
+            <div className="glass-card-static" style={{ marginBottom: '2rem', padding: 'var(--spacing-lg)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.2rem' }}>
+                            Site Background
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                            Visible to all visitors. Recommended: 1920×1080 or larger.
+                        </p>
+                    </div>
+                    {currentBg && (
+                        <button
+                            onClick={handleRemoveBg}
+                            disabled={bgSaving}
+                            className="btn btn-ghost"
+                            style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
+                        >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4h6v2" />
+                            </svg>
+                            Remove
+                        </button>
+                    )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+                    {/* Upload zone */}
+                    <div>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={e => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setBgPreview(URL.createObjectURL(file));
+                                handleBgUpload(file);
+                                e.target.value = '';
+                            }}
+                        />
+                        <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={bgUploading}
+                            style={{
+                                width: '100%',
+                                minHeight: '120px',
+                                border: '2px dashed var(--card-border)',
+                                borderRadius: 'var(--radius-md)',
+                                background: 'var(--card-bg)',
+                                cursor: bgUploading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.5rem',
+                                transition: 'border-color var(--transition-fast)',
+                                padding: '1.5rem',
+                            }}
+                            onMouseEnter={e => !bgUploading && ((e.currentTarget as HTMLElement).style.borderColor = 'var(--accent-primary)')}
+                            onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--card-border)')}
+                        >
+                            {bgUploading ? (
+                                <>
+                                    <div className="skeleton" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Uploading…</span>
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="1.5">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500 }}>
+                                        Click to upload image
+                                    </span>
+                                    <span style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>PNG, JPG, WEBP — max 8 MB</span>
+                                </>
+                            )}
+                        </button>
+
+                        {bgMsg && (
+                            <p style={{
+                                marginTop: '0.75rem',
+                                fontSize: '0.875rem',
+                                color: bgMsg.startsWith('✓') ? 'var(--accent-primary)' : '#f87171',
+                                fontWeight: 500,
+                            }}>
+                                {bgMsg}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Preview + opacity */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {/* Preview thumbnail */}
+                        <div style={{
+                            width: '100%',
+                            height: '120px',
+                            borderRadius: 'var(--radius-md)',
+                            overflow: 'hidden',
+                            border: '1px solid var(--card-border)',
+                            background: 'var(--bg-tertiary)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                        }}>
+                            {(bgPreview || currentBg) ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                    src={bgPreview || currentBg}
+                                    alt="Background preview"
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: bgPreview ? 0.6 : bgOpacity * 3 + 0.3 }}
+                                />
+                            ) : (
+                                <span style={{ color: 'var(--text-tertiary)', fontSize: '0.8rem' }}>No background set</span>
+                            )}
+                            {currentBg && !bgPreview && (
+                                <span style={{
+                                    position: 'absolute', bottom: '6px', right: '8px',
+                                    fontSize: '0.7rem', background: 'rgba(0,0,0,0.6)',
+                                    color: '#fff', padding: '2px 6px', borderRadius: '4px',
+                                }}>
+                                    Active
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Opacity slider */}
+                        <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                                    Opacity
+                                </label>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--accent-primary)', fontWeight: 600 }}>
+                                    {Math.round(bgOpacity * 100)}%
+                                </span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={bgOpacity}
+                                onChange={e => setBgOpacity(parseFloat(e.target.value))}
+                                style={{ width: '100%', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+                            />
+                            <button
+                                onClick={handleOpacitySave}
+                                disabled={bgSaving || !currentBg}
+                                className="btn btn-secondary"
+                                style={{ marginTop: '0.75rem', width: '100%', fontSize: '0.875rem', padding: '0.5rem' }}
+                            >
+                                {bgSaving ? 'Saving…' : 'Save Opacity'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
