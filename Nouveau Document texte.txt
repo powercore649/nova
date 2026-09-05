@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 MONGODB_URI=mongodb+srv://raphwieczorek_db_user:novacorp@cluster0.kzulyww.mongodb.net/bumpify?retryWrites=true&w=majority
+=======
+MONGODB_URI=mongodb+srv://raphwieczorek_db_user:novacorp@cluster0.kzulyww.mongodb.net/bumpify?retryWrites=true&w=majority
+>>>>>>> c53676eb6d9ec124a44f4083b74bc125864ad65b
 JWT_SECRET=nova
