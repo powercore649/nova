@@ -5,8 +5,11 @@ import './globals.css';
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'nova-browserdev ',
-  description: 'nova-browser is love',
+  title: 'nova-browser',
+  description: 'Your premium gateway to legendary source code.',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
