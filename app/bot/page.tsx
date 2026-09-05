@@ -114,19 +114,6 @@ const FEATURES = [
   },
 ];
 
-const COMMANDS = [
-  { name: '/warn <user> [reason]', description: 'Issue a warning to a member' },
-  { name: '/mute <user> <duration>', description: 'Temporarily mute a member' },
-  { name: '/ban <user> [reason]', description: 'Ban a member from the server' },
-  { name: '/kick <user> [reason]', description: 'Kick a member from the server' },
-  { name: '/infractions <user>', description: 'View infraction history for a user' },
-  { name: '/purge <amount>', description: 'Bulk-delete messages in a channel' },
-  { name: '/lockdown', description: 'Lock all channels during a raid' },
-  { name: '/automod config', description: 'Configure auto-moderation rules' },
-  { name: '/logs set <channel>', description: 'Set the logging channel' },
-  { name: '/role add <user> <role>', description: 'Assign a role to a member' },
-];
-
 export default function BotPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -169,7 +156,6 @@ export default function BotPage() {
           {/* Desktop links */}
           <div className="mobile-hidden" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             <a href="#features" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>Features</a>
-            <a href="#commands" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>Commands</a>
             <Link href="/support" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>Support</Link>
             <Link href="/" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>nova-browser</Link>
             <a
@@ -208,9 +194,8 @@ export default function BotPage() {
             animation: 'slideDown 0.3s ease-out',
           }}>
             {[
-              { href: '#features', label: 'Features', external: false },
-              { href: '#commands', label: 'Commands', external: false },
-              { href: '/support', label: 'Support', external: false },
+              { href: '#features', label: 'Features' },
+              { href: '/support', label: 'Support' },
               { href: '/', label: 'nova-browser', external: false },
             ].map(({ href, label }) => (
               <a key={href} href={href} onClick={() => setMobileMenuOpen(false)} style={{
@@ -379,50 +364,6 @@ export default function BotPage() {
         </div>
       </section>
 
-      {/* ── Commands ── */}
-      <section id="commands" className="container" style={{ paddingBottom: '5rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <div style={{
-            display: 'inline-block', marginBottom: '0.75rem',
-            padding: '0.4rem 0.9rem',
-            background: 'rgba(34,197,94,0.08)',
-            border: '1px solid rgba(34,197,94,0.25)',
-            borderRadius: 'var(--radius-full)',
-            color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 600,
-          }}>
-            ⚡ Slash Commands
-          </div>
-          <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-            Simple commands,{' '}
-            <span className="gradient-text">powerful results</span>
-          </h2>
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: '780px', margin: '0 auto' }}>
-          {COMMANDS.map((cmd) => (
-            <div key={cmd.name} className="glass-card-static" style={{
-              display: 'flex', alignItems: 'center', gap: '1.25rem',
-              padding: '1rem 1.5rem', borderRadius: 'var(--radius-md)', flexWrap: 'wrap',
-            }}>
-              <code style={{
-                fontFamily: 'var(--font-display)', fontSize: '0.9rem',
-                color: '#818cf8',
-                background: 'rgba(88,101,242,0.1)',
-                border: '1px solid rgba(88,101,242,0.2)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '0.3rem 0.75rem',
-                whiteSpace: 'nowrap', flexShrink: 0,
-              }}>
-                {cmd.name}
-              </code>
-              <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                {cmd.description}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ── CTA ── */}
       <section className="container" style={{ paddingBottom: '5rem' }}>
         <div className="glass-card-static" style={{
@@ -498,7 +439,6 @@ export default function BotPage() {
             </span>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
               <a href="#features" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Features</a>
-              <a href="#commands" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Commands</a>
               <Link href="/support" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Support</Link>
               <Link href="/" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>nova-browser</Link>
             </div>
