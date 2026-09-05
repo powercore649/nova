@@ -1,0 +1,2 @@
+MONGODB_URI=mongodb+srv://raphwieczorek_db_user:novacorp@cluster0.kzulyww.mongodb.net/bumpify?retryWrites=true&w=majority
+JWT_SECRET=nova
