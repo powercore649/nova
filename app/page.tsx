@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import DetailModal, { DetailItem } from '@/components/DetailModal';
+import { ThemeToggle } from '@/components/ThemeProvider';
 
 interface LatestItem {
   _id: string;
@@ -146,6 +147,9 @@ export default function Home() {
             <Link href="/roadmap" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
               Roadmap
             </Link>
+            <Link href="/collections" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
+              Collections
+            </Link>
             <Link href="/bot" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               {/* Discord icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -156,6 +160,7 @@ export default function Home() {
             <Link href="/login" className="btn btn-primary" style={{ padding: '0.625rem 1.25rem', fontSize: '0.9rem' }}>
               Staff Login
             </Link>
+            <ThemeToggle />
           </div>
 
           {/* Mobile Hamburger */}

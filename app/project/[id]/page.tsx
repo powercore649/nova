@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Snippet from '@/models/Snippet';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
+import ProjectInteractions from '@/components/ProjectInteractions';
 
 export const dynamic = 'force-dynamic';
 
@@ -150,7 +151,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <Link href="/" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>&larr; Back</Link>
                     <span style={{ fontWeight: 600 }}>{project.title}</span>
                 </div>
-
+                <ProjectInteractions projectId={String((project as any)._id)} projectTitle={project.title as string} />
             </nav>
             <iframe
                 srcDoc={previewContent}
