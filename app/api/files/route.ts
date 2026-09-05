@@ -1,18 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import File from '@/models/File';
-import { cookies } from 'next/headers';
+import UserFile from '@/models/UserFile';
 
 export const dynamic = 'force-dynamic';
 
-// GET: List all files (public for now - add auth later if needed)
+// GET: List all files (staff files + approved user uploads)
 export async function GET(request: NextRequest) {
     try {
         await dbConnect();
 
-        const files = await File.find({}).sort({ createdAt: -1 }).lean();
+        const [staffFiles, userFiles] = await Promise.all([
+            File.find({}).sort({ createdAt: -1 }).lean(),
+            UserFile.find({ status: 'approved' }).sort({ createdAt: -1 }).lean(),
+        ]);
 
-        return NextResponse.json({ files }, { status: 200 });
+        // Normalize userFiles to match File shape
+        const normalizedUserFiles = userFiles.map((f: any) => ({
+            _id: f._id,
+            filename: `user-${f._id}`,
+            originalName: f.originalName,
+            fileUrl: f.fileUrl,
+            fileType: f.fileType,
+            mimeType: f.mimeType,
+            fileSize: f.fileSize,
+            thumbnailUrl: f.thumbnailUrl || '',
+            youtubeUrl: '',
+            uploadedBy: f.uploaderName || 'Community',
+            downloads: f.downloads || 0,
+            createdAt: f.createdAt,
+            updatedAt: f.updatedAt,
+            _source: 'user', // flag to distinguish if needed
+        }));
+
+        // Merge and sort by date
+        const allFiles = [...staffFiles, ...normalizedUserFiles].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        return NextResponse.json({ files: allFiles }, { status: 200 });
     } catch (error) {
         console.error('Error fetching files:', error);
         return NextResponse.json({ error: 'Failed to fetch files' }, { status: 500 });
