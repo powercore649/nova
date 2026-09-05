@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import DetailModal, { DetailItem } from '@/components/DetailModal';
+import Navbar from '@/components/Navbar';
 
 interface FileItem {
     _id: string;
@@ -64,12 +65,9 @@ export default function FilesPage() {
     });
 
     return (
-        <main className="container" style={{ padding: '2.5rem 1.5rem', minHeight: '100vh' }}>
-            <nav style={{ marginBottom: '2rem' }}>
-                <Link href="/" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    &larr; Home
-                </Link>
-            </nav>
+        <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Navbar />
+            <div className="container" style={{ padding: '2rem 1.5rem', flex: 1 }}>
 
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Files</h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
@@ -213,6 +211,7 @@ export default function FilesPage() {
                     onClose={() => setDetail(null)}
                 />
             )}
+            </div>
         </main>
     );
 }

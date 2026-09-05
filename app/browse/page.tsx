@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DetailModal, { DetailItem } from '@/components/DetailModal';
+import Navbar from '@/components/Navbar';
 
 interface BrowseItem {
     _id: string;
@@ -98,6 +99,7 @@ export default function BrowsePage() {
 
     return (
         <main style={{ minHeight: '100vh', paddingBottom: '4rem' }}>
+            <Navbar />
             {/* Header */}
             <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
                 <div style={{
@@ -109,21 +111,6 @@ export default function BrowsePage() {
                     gap: '1rem'
                 }}>
                     <div>
-                        <Link
-                            href="/"
-                            className="btn btn-ghost"
-                            style={{
-                                padding: '0.5rem 1rem',
-                                marginBottom: '1rem',
-                                display: 'inline-flex'
-                            }}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                            Back
-                        </Link>
                         <h1 style={{
                             fontSize: 'clamp(2rem, 5vw, 3rem)',
                             fontFamily: 'var(--font-display)',

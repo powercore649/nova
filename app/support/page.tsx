@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import Navbar from '@/components/Navbar';
 
 export default function SupportPage() {
     const [name, setName] = useState('');
@@ -62,12 +63,9 @@ export default function SupportPage() {
     }
 
     return (
-        <main className="container" style={{ padding: '2.5rem 1.5rem', minHeight: '100vh', maxWidth: '600px' }}>
-            <nav style={{ marginBottom: '2rem' }}>
-                <Link href="/" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
-                    &larr; Home
-                </Link>
-            </nav>
+        <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Navbar />
+            <div className="container" style={{ padding: '2rem 1.5rem', flex: 1, maxWidth: '640px' }}>
 
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>Support</h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
@@ -158,6 +156,7 @@ export default function SupportPage() {
                     {status === 'loading' ? 'Sending...' : 'Submit Ticket'}
                 </button>
             </form>
+            </div>
         </main>
     );
 }

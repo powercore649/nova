@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import Navbar from '@/components/Navbar';
 
 const CHANGELOGS = [
   {
@@ -79,98 +80,9 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function ChangelogsPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-
-      {/* ── Navbar ── */}
-      <nav className="glass-card-static" style={{
-        margin: '1rem',
-        borderRadius: 'var(--radius-full)',
-        padding: '1rem 1.5rem',
-        position: 'sticky',
-        top: '1rem',
-        zIndex: 1000,
-        animation: 'slideDown 0.6s ease-out',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{
-            fontSize: '1.5rem', fontWeight: 'bold',
-            fontFamily: 'var(--font-display)',
-            background: 'var(--accent-gradient)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>
-            nova-browser
-          </Link>
-
-          <div className="mobile-hidden" style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-            {[
-              { href: '/', label: 'Home' },
-              { href: '/browse', label: 'Browse' },
-              { href: '/docs', label: 'Docs' },
-              { href: '/files', label: 'Files' },
-              { href: '/support', label: 'Support' },
-              { href: '/changelogs', label: 'Changelog' },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href} style={{
-                color: href === '/changelogs' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: href === '/changelogs' ? 600 : 500,
-                transition: 'color var(--transition-fast)',
-              }}>
-                {label}
-              </Link>
-            ))}
-            <Link href="/login" className="btn btn-primary" style={{ padding: '0.625rem 1.25rem', fontSize: '0.9rem' }}>
-              Staff Login
-            </Link>
-          </div>
-
-          <button
-            className="desktop-hidden btn-icon"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-            style={{ padding: '0.5rem' }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {mobileMenuOpen
-                ? <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>
-                : <><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="18" x2="21" y2="18" /></>}
-            </svg>
-          </button>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="desktop-hidden" style={{
-            marginTop: '1rem', paddingTop: '1rem',
-            borderTop: '1px solid var(--card-border)',
-            display: 'flex', flexDirection: 'column', gap: '0.75rem',
-            animation: 'slideDown 0.3s ease-out',
-          }}>
-            {[
-              { href: '/', label: 'Home' },
-              { href: '/browse', label: 'Browse' },
-              { href: '/docs', label: 'Docs' },
-              { href: '/files', label: 'Files' },
-              { href: '/support', label: 'Support' },
-              { href: '/changelogs', label: 'Changelog' },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href} onClick={() => setMobileMenuOpen(false)} style={{
-                padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)',
-                color: 'var(--text-secondary)', fontWeight: 500,
-                transition: 'all var(--transition-fast)',
-              }}>
-                {label}
-              </Link>
-            ))}
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="btn btn-primary"
-              style={{ padding: '0.75rem 1rem', fontSize: '0.9rem', textAlign: 'center' }}>
-              Staff Login
-            </Link>
-          </div>
-        )}
-      </nav>
-
+      <Navbar />
       {/* ── Hero ── */}
       <section className="container animate-fadeIn" style={{ padding: '4rem 0 3rem', textAlign: 'center' }}>
         <div style={{
