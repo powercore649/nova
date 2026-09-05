@@ -150,6 +150,14 @@ export default function Home() {
             <Link href="/collections" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)' }}>
               Collections
             </Link>
+            <Link href="/upload" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload
+            </Link>
             <Link href="/bot" style={{ color: 'var(--text-secondary)', fontWeight: 500, transition: 'color var(--transition-fast)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
               {/* Discord icon */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -290,6 +298,13 @@ export default function Home() {
               style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontWeight: 500, transition: 'all var(--transition-fast)' }}
             >
               Roadmap
+            </Link>
+            <Link
+              href="/upload"
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontWeight: 500, transition: 'all var(--transition-fast)' }}
+            >
+              Upload
             </Link>
             <Link
               href="/bot"
@@ -1001,6 +1016,9 @@ export default function Home() {
                 </Link>
                 <Link href="/roadmap" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Roadmap
+                </Link>
+                <Link href="/upload" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                  Upload a File
                 </Link>
                 <Link href="/bot" style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                   Discord Bot

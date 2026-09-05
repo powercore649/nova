@@ -7,6 +7,11 @@ export default function Dashboard() {
     const [snippets, setSnippets] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // Pending uploads moderation
+    const [pendingUploads, setPendingUploads] = useState<any[]>([]);
+    const [pendingLoading, setPendingLoading] = useState(true);
+    const [reviewMsg, setReviewMsg] = useState<Record<string, string>>({});
+
     // Background state
     const [currentBg, setCurrentBg] = useState('');
     const [bgOpacity, setBgOpacity] = useState(0.15);
@@ -55,6 +60,12 @@ export default function Dashboard() {
                 if (typeof data?.settings?.backgroundOpacity === 'number') setBgOpacity(data.settings.backgroundOpacity);
             })
             .catch(() => {});
+
+        // Load pending user uploads
+        fetch('/api/user-uploads/pending')
+            .then(res => res.json())
+            .then(data => { setPendingUploads(data.files || []); setPendingLoading(false); })
+            .catch(() => setPendingLoading(false));
     }, []);
 
     async function handleOpacitySave() {
@@ -95,6 +106,22 @@ export default function Dashboard() {
 
     const totalProjects = snippets.length;
     const recentProjects = snippets.slice(0, 5);
+
+    async function reviewUpload(id: string, status: 'approved' | 'rejected') {
+        setReviewMsg(prev => ({ ...prev, [id]: 'Saving…' }));
+        try {
+            const res = await fetch(`/api/user-uploads/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) throw new Error('Failed');
+            setPendingUploads(prev => prev.filter(f => f._id !== id));
+            setReviewMsg(prev => ({ ...prev, [id]: status === 'approved' ? '✓ Approved' : '✓ Rejected' }));
+        } catch {
+            setReviewMsg(prev => ({ ...prev, [id]: '✗ Error' }));
+        }
+    }
 
     return (
         <main className="container" style={{ padding: '2rem 1.5rem', minHeight: '100vh' }}>
@@ -388,9 +415,105 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Projects Table/Cards */}
-            <div className="glass-card-static" style={{ padding: 0, overflow: 'hidden' }}>
+            {/* Pending User Uploads — Moderation Panel */}
+            <div className="glass-card-static" style={{ marginBottom: '2rem', padding: 0, overflow: 'hidden' }}>
                 <div style={{
+                    padding: 'var(--spacing-lg)',
+                    borderBottom: '1px solid var(--card-border)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem',
+                }}>
+                    <div>
+                        <h2 style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '0.15rem' }}>
+                            📥 Pending User Uploads
+                        </h2>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+                            Review and approve or reject community-submitted files.
+                        </p>
+                    </div>
+                    {!pendingLoading && (
+                        <span className="badge" style={{
+                            fontSize: '0.75rem',
+                            background: pendingUploads.length > 0 ? 'rgba(251,191,36,0.12)' : 'var(--card-bg)',
+                            borderColor: pendingUploads.length > 0 ? 'rgba(251,191,36,0.35)' : 'var(--card-border)',
+                            color: pendingUploads.length > 0 ? '#fbbf24' : 'var(--text-tertiary)',
+                        }}>
+                            {pendingUploads.length} pending
+                        </span>
+                    )}
+                </div>
+
+                {pendingLoading ? (
+                    <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {[1, 2].map(i => <div key={i} className="skeleton" style={{ height: '64px', borderRadius: 'var(--radius-md)' }}/>)}
+                    </div>
+                ) : pendingUploads.length === 0 ? (
+                    <div style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No pending uploads — all clear!</p>
+                    </div>
+                ) : (
+                    <div style={{ padding: 'var(--spacing-md)', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                        {pendingUploads.map((f: any) => (
+                            <div key={f._id} style={{
+                                display: 'flex', alignItems: 'center', gap: '1rem',
+                                background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+                                borderRadius: 'var(--radius-md)', padding: '0.75rem 1rem', flexWrap: 'wrap',
+                            }}>
+                                {/* Icon */}
+                                <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>
+                                    {f.fileType === 'image' ? '🖼️' : '🗜️'}
+                                </span>
+
+                                {/* Info */}
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {f.originalName}
+                                    </div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                                        <span>by <strong style={{ color: 'var(--text-secondary)' }}>{f.uploaderName}</strong></span>
+                                        <span>{(f.fileSize / 1024 / 1024).toFixed(1)} MB</span>
+                                        <span>{new Date(f.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    {f.uploaderNote && (
+                                        <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0', fontStyle: 'italic' }}>
+                                            "{f.uploaderNote}"
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Actions */}
+                                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignItems: 'center' }}>
+                                    {reviewMsg[f._id] ? (
+                                        <span style={{ fontSize: '0.82rem', fontWeight: 600, color: reviewMsg[f._id].startsWith('✓') ? 'var(--accent-primary)' : '#f87171' }}>
+                                            {reviewMsg[f._id]}
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => reviewUpload(f._id, 'approved')}
+                                                className="btn btn-primary"
+                                                style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}
+                                            >
+                                                ✓ Approve
+                                            </button>
+                                            <button
+                                                onClick={() => reviewUpload(f._id, 'rejected')}
+                                                className="btn btn-ghost"
+                                                style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
+                                            >
+                                                ✗ Reject
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Projects Table/Cards */}
+            <div className="glass-card-static" style={{ padding: 0, overflow: 'hidden' }}>                <div style={{
                     padding: 'var(--spacing-lg)',
                     borderBottom: '1px solid var(--card-border)'
                 }}>
