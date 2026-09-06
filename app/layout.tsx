@@ -4,6 +4,7 @@ import BackgroundProvider from '@/components/BackgroundProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import SplashScreen from '@/components/SplashScreen';
+import OfflineDetector from '@/components/OfflineDetector';
 import './globals.css';
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
@@ -44,6 +45,7 @@ export default function RootLayout({
       <body className={jetbrainsMono.className}>
         <ThemeProvider>
           <SplashScreen />
+          <OfflineDetector />
           <BackgroundProvider />
           <KeyboardShortcuts />
           {children}
