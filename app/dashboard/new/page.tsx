@@ -9,11 +9,12 @@ export default function NewProjectPage() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        language: 'html', // Enforced
+        language: 'html',
         code: '',
         tags: '',
         downloadUrl: '',
         youtubeUrl: '',
+        accentColor: '#22c55e',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -126,6 +127,39 @@ export default function NewProjectPage() {
                     />
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '0.4rem' }}>
                         Shown as an embedded tutorial video when visitors click this project.
+                    </p>
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>🎨 Accent Color (optional)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <input
+                            type="color"
+                            value={formData.accentColor}
+                            onChange={e => setFormData({ ...formData, accentColor: e.target.value })}
+                            style={{ width: '48px', height: '48px', padding: '2px', borderRadius: 'var(--radius-md)', border: '1px solid var(--card-border)', background: 'transparent', cursor: 'pointer' }}
+                        />
+                        <div style={{ flex: 1 }}>
+                            <input
+                                type="text"
+                                className="glass-card"
+                                style={{ width: '100%', padding: '0.75rem', color: 'white', background: 'rgba(0,0,0,0.2)', outline: 'none' }}
+                                value={formData.accentColor}
+                                onChange={e => setFormData({ ...formData, accentColor: e.target.value })}
+                                placeholder="#22c55e"
+                                maxLength={7}
+                            />
+                        </div>
+                        <div style={{
+                            width: '80px', height: '48px',
+                            borderRadius: 'var(--radius-md)',
+                            background: `linear-gradient(135deg, ${formData.accentColor}, ${formData.accentColor}99)`,
+                            border: '1px solid var(--card-border)',
+                            flexShrink: 0,
+                        }} />
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-tertiary)', marginTop: '0.4rem' }}>
+                        Custom accent color applied inside the project page. Defaults to nova-browser green.
                     </p>
                 </div>
 

@@ -29,7 +29,11 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const { id } = await params;
     const project: any = await getProject(id);
-    if (!project) return { title: 'Sort N Save' };
+    if (!project) return { title: 'Not Found' };
+
+    const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://novacorpbumpify.dpdns.org';
+    const url = `${SITE_URL}/project/${id}`;
+    const accent = project.accentColor || '#22c55e';
 
     return {
         title: project.title,
@@ -37,10 +41,23 @@ export async function generateMetadata(
         openGraph: {
             title: project.title,
             description: project.description,
-            siteName: 'nova-browser CDN',
-            type: 'website',
-        }
-    }
+            siteName: 'nova-browser',
+            type: 'article',
+            url,
+            images: [{
+                url: `${SITE_URL}/api/og?title=${encodeURIComponent(project.title)}&description=${encodeURIComponent(project.description?.slice(0, 120) || '')}&accent=${encodeURIComponent(accent)}`,
+                width: 1200,
+                height: 630,
+                alt: project.title,
+            }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: project.title,
+            description: project.description,
+            images: [`${SITE_URL}/api/og?title=${encodeURIComponent(project.title)}&description=${encodeURIComponent(project.description?.slice(0, 120) || '')}&accent=${encodeURIComponent(accent)}`],
+        },
+    };
 }
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -51,8 +68,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         notFound();
     }
 
-    // FORCE HTML MODE ALWAYS
-    // We inject the premium theme CSS so the user's content looks like the site
+    const accent = (project as any).accentColor || '#22c55e';
+    const accentSecondary = accent === '#22c55e' ? '#4ade80' : accent + 'cc';
+
     const themeCSS = `
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&display=swap');
@@ -60,8 +78,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         :root {
             --bg-dark: #0a0a0a;
             --bg-secondary: #131813;
-            --accent-primary: #22c55e;
-            --accent-secondary: #4ade80;
+            --accent-primary: ${accent};
+            --accent-secondary: ${accentSecondary};
             --text-primary: #f2f5f2;
             --text-secondary: #a3b8ab;
             --glass-bg: rgba(19, 24, 19, 0.7);

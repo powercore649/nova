@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     }
 
     try {
-        const { title, description, code, language, tags, downloadUrl, youtubeUrl } = await req.json();
+        const { title, description, code, language, tags, downloadUrl, youtubeUrl, accentColor } = await req.json();
         await dbConnect();
 
         const tagsArray = Array.isArray(tags) ? tags : tags?.split(',').map((t: string) => t.trim());
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
             tags: tagsArray,
             downloadUrl,
             youtubeUrl,
+            accentColor: accentColor || '',
         });
 
         // Emit notification for new project
