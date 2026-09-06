@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import NotificationBell from '@/components/NotificationBell';
 
@@ -17,33 +17,46 @@ const LINKS = [
   { href: '/docs',         label: 'Docs' },
   { href: '/files',        label: 'Files' },
   { href: '/upload',       label: 'Upload' },
+  { href: '/support',      label: 'Support' },
+];
+
+// Secondary links — shown only in sidebar / "More" menu
+const MORE_LINKS = [
   { href: '/collections',  label: 'Collections' },
   { href: '/bookmarks',    label: 'Bookmarks' },
   { href: '/leaderboard',  label: 'Leaderboard' },
   { href: '/roadmap',      label: 'Roadmap' },
   { href: '/changelogs',   label: 'Changelog' },
-  { href: '/support',      label: 'Support' },
   { href: '/bot',          label: 'Bot' },
 ];
 
-// Split into two groups for desktop to avoid overflow
-const PRIMARY_LINKS   = LINKS.slice(0, 6);   // Home → Collections
-const SECONDARY_LINKS = LINKS.slice(6);       // Leaderboard → Bot
+const ALL_LINKS = [...LINKS, ...MORE_LINKS];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [accountLoading, setAccountLoading] = useState(true);
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  // Fetch current session
   useEffect(() => {
     fetch('/api/account/me')
       .then(r => r.json())
       .then(d => { setAccount(d.account ?? null); setAccountLoading(false); })
       .catch(() => setAccountLoading(false));
-  }, [pathname]); // re-check on route change
+  }, [pathname]);
+
+  // Close "More" on outside click
+  useEffect(() => {
+    if (!moreOpen) return;
+    function handle(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+    }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [moreOpen]);
 
   async function handleLogout() {
     await fetch('/api/account/logout', { method: 'POST' });
@@ -104,7 +117,7 @@ export default function Navbar() {
           {/* Desktop links */}
           <div
             className="mobile-hidden"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1, justifyContent: 'center', flexWrap: 'wrap' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flex: 1, justifyContent: 'center', flexWrap: 'nowrap' }}
           >
             {LINKS.map(({ href, label }) => {
               const active = isActive(href);
@@ -140,6 +153,71 @@ export default function Navbar() {
                 </Link>
               );
             })}
+
+            {/* More dropdown */}
+            <div ref={moreRef} style={{ position: 'relative' }}>
+              <button
+                onClick={() => setMoreOpen(v => !v)}
+                style={{
+                  padding: '0.35rem 0.7rem',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.85rem',
+                  fontWeight: MORE_LINKS.some(l => isActive(l.href)) ? 600 : 400,
+                  color: MORE_LINKS.some(l => isActive(l.href)) ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                  background: moreOpen || MORE_LINKS.some(l => isActive(l.href)) ? 'rgba(34,197,94,0.1)' : 'transparent',
+                  border: moreOpen || MORE_LINKS.some(l => isActive(l.href)) ? '1px solid rgba(34,197,94,0.25)' : '1px solid transparent',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '0.25rem',
+                  transition: 'all var(--transition-fast)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                More
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                  style={{ transform: moreOpen ? 'rotate(180deg)' : 'none', transition: 'transform 200ms' }}>
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </button>
+
+              {moreOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 0.5rem)', left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'var(--bg-secondary)',
+                  border: '1px solid var(--card-border)',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: 'var(--shadow-lg)',
+                  padding: '0.4rem',
+                  minWidth: '160px',
+                  zIndex: 300,
+                  animation: 'slideDown 0.15s ease-out',
+                }}>
+                  {MORE_LINKS.map(({ href, label }) => {
+                    const active = isActive(href);
+                    return (
+                      <Link key={href} href={href}
+                        onClick={() => setMoreOpen(false)}
+                        style={{
+                          display: 'block',
+                          padding: '0.55rem 0.85rem',
+                          borderRadius: 'var(--radius-md)',
+                          fontSize: '0.875rem',
+                          fontWeight: active ? 600 : 400,
+                          color: active ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                          background: active ? 'rgba(34,197,94,0.08)' : 'transparent',
+                          transition: 'all var(--transition-fast)',
+                          whiteSpace: 'nowrap',
+                        }}
+                        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--card-bg)'; }}
+                        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Desktop right actions */}
@@ -328,7 +406,7 @@ export default function Navbar() {
             Navigation
           </p>
 
-          {LINKS.map(({ href, label }) => {
+          {ALL_LINKS.map(({ href, label }) => {
             const active = isActive(href);
             return (
               <Link
