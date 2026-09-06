@@ -85,13 +85,16 @@ export default function Navbar() {
       <nav
         className="glass-card-static"
         style={{
-          margin: '1rem',
+          margin: '0.875rem',
           borderRadius: 'var(--radius-full)',
-          padding: '0.75rem 1.25rem',
+          padding: '0.5rem 0.875rem',
           position: 'sticky',
-          top: '1rem',
+          top: '0.875rem',
           zIndex: 200,
-          animation: 'slideDown 0.5s ease-out',
+          animation: 'slideDown 0.4s var(--ease-fast)',
+          backdropFilter: 'var(--blur-lg)',
+          WebkitBackdropFilter: 'var(--blur-lg)',
+          boxShadow: '0 1px 0 rgba(255,255,255,0.04), var(--shadow-sm)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
