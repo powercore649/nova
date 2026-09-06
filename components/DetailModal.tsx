@@ -182,7 +182,7 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
         const data = await res.json();
         if (res.ok) {
             setCollections(prev => [data.collection, ...prev]);
-            setNewColName(''); setNewColDesc(''); setNewColAuthor('');
+            setNewColName(''); setNewColDesc('');
             setColMsg('✓ Collection created');
         } else {
             setColMsg('✗ Failed');
