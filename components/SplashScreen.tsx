@@ -78,46 +78,106 @@ export default function SplashScreen() {
         animation: 'pulse 2s ease-in-out infinite',
       }} />
 
-      {/* Logo */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1.5rem',
-        animation: 'slideUp 0.5s var(--ease-fast) both',
-      }}>
-        {/* Icon */}
-        <div style={{
-          width: '72px',
-          height: '72px',
-          borderRadius: '20px',
-          background: 'linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05))',
-          border: '1px solid rgba(34,197,94,0.25)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 40px rgba(34,197,94,0.15)',
-        }}>
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M9 7h6M9 11h4" stroke="#4ade80" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
-        </div>
+      {/* Floating particles */}
+      {[
+        { top: '15%', left: '8%',  size: 8,  opacity: 0.25, delay: '0s' },
+        { top: '25%', left: '18%', size: 14, opacity: 0.15, delay: '0.4s' },
+        { top: '60%', left: '6%',  size: 6,  opacity: 0.2,  delay: '0.8s' },
+        { top: '75%', left: '20%', size: 10, opacity: 0.12, delay: '0.2s' },
+        { top: '40%', left: '4%',  size: 18, opacity: 0.08, delay: '1s' },
+        { top: '10%', right: '10%', size: 10, opacity: 0.2, delay: '0.6s' },
+        { top: '30%', right: '6%',  size: 16, opacity: 0.12, delay: '0s' },
+        { top: '55%', right: '12%', size: 8,  opacity: 0.22, delay: '0.3s' },
+        { top: '70%', right: '20%', size: 12, opacity: 0.1,  delay: '0.9s' },
+        { top: '85%', right: '8%',  size: 6,  opacity: 0.18, delay: '0.5s' },
+        { top: '80%', left: '45%',  size: 8,  opacity: 0.15, delay: '0.7s' },
+        { top: '5%',  left: '40%',  size: 10, opacity: 0.1,  delay: '1.1s' },
+      ].map((p, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          top: p.top,
+          left: (p as any).left,
+          right: (p as any).right,
+          width: `${p.size}px`,
+          height: `${p.size}px`,
+          borderRadius: '50%',
+          background: 'rgba(34,197,94,0.35)',
+          opacity: p.opacity,
+          animation: `float ${2 + (i % 3) * 0.5}s ease-in-out ${p.delay} infinite alternate`,
+          pointerEvents: 'none',
+        }} />
+      ))}
 
-        {/* Wordmark */}
+      {/* Rings loader */}
+      <div style={{
+        position: 'relative',
+        width: '180px',
+        height: '180px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: 'fadeIn 0.4s var(--ease-fast) both',
+      }}>
+        {/* Ring 1 — outer, slow */}
+        <svg style={{ position: 'absolute', inset: 0, animation: 'spin 3s linear infinite' }} width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="82" fill="none" stroke="rgba(34,197,94,0.12)" strokeWidth="2" />
+          <circle cx="90" cy="90" r="82" fill="none" stroke="#22c55e" strokeWidth="2"
+            strokeDasharray="90 428" strokeDashoffset="0" strokeLinecap="round" />
+          <circle cx="90" cy="90" r="82" fill="none" stroke="#22c55e" strokeWidth="2"
+            strokeDasharray="40 428" strokeDashoffset="-180" strokeLinecap="round" />
+        </svg>
+
+        {/* Ring 2 — mid, medium */}
+        <svg style={{ position: 'absolute', inset: '18px', animation: 'spin 2s linear infinite reverse' }} width="144" height="144" viewBox="0 0 144 144">
+          <circle cx="72" cy="72" r="64" fill="none" stroke="rgba(34,197,94,0.1)" strokeWidth="2" />
+          <circle cx="72" cy="72" r="64" fill="none" stroke="#4ade80" strokeWidth="2.5"
+            strokeDasharray="70 332" strokeDashoffset="0" strokeLinecap="round" />
+          <circle cx="72" cy="72" r="64" fill="none" stroke="#4ade80" strokeWidth="2.5"
+            strokeDasharray="30 332" strokeDashoffset="-140" strokeLinecap="round" />
+        </svg>
+
+        {/* Ring 3 — inner, fast */}
+        <svg style={{ position: 'absolute', inset: '36px', animation: 'spin 1.4s linear infinite' }} width="108" height="108" viewBox="0 0 108 108">
+          <circle cx="54" cy="54" r="46" fill="none" stroke="rgba(34,197,94,0.08)" strokeWidth="2" />
+          <circle cx="54" cy="54" r="46" fill="none" stroke="#22c55e" strokeWidth="3"
+            strokeDasharray="55 239" strokeDashoffset="0" strokeLinecap="round" />
+        </svg>
+
+        {/* Center text */}
         <div style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '1.75rem',
-          fontWeight: 800,
-          letterSpacing: '-0.04em',
-          background: 'var(--accent-gradient)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '0.2rem',
+          zIndex: 1,
         }}>
-          nova-browser
+          <span style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '0.65rem',
+            fontWeight: 700,
+            letterSpacing: '0.18em',
+            color: 'var(--text-secondary)',
+            textTransform: 'uppercase',
+          }}>
+            nova
+          </span>
         </div>
+      </div>
+
+      {/* Wordmark below rings */}
+      <div style={{
+        marginTop: '2rem',
+        fontFamily: 'var(--font-display)',
+        fontSize: '1.5rem',
+        fontWeight: 800,
+        letterSpacing: '-0.04em',
+        background: 'var(--accent-gradient)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+        backgroundClip: 'text',
+        animation: 'slideUp 0.5s var(--ease-fast) 0.15s both',
+      }}>
+        nova-browser
       </div>
 
       {/* Progress area */}
