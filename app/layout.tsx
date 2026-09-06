@@ -3,6 +3,7 @@ import { JetBrains_Mono } from 'next/font/google';
 import BackgroundProvider from '@/components/BackgroundProvider';
 import ThemeProvider from '@/components/ThemeProvider';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
+import SplashScreen from '@/components/SplashScreen';
 import './globals.css';
 
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'] });
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={jetbrainsMono.className}>
         <ThemeProvider>
+          <SplashScreen />
           <BackgroundProvider />
           <KeyboardShortcuts />
           {children}
