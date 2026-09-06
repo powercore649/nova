@@ -1,10 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ThemeToggle } from '@/components/ThemeProvider';
 import NotificationBell from '@/components/NotificationBell';
+
+interface Account {
+  accountId: string;
+  username: string;
+}
 
 const LINKS = [
   { href: '/',             label: 'Home' },
@@ -27,7 +32,25 @@ const SECONDARY_LINKS = LINKS.slice(6);       // Leaderboard → Bot
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [accountLoading, setAccountLoading] = useState(true);
+
+  // Fetch current session
+  useEffect(() => {
+    fetch('/api/account/me')
+      .then(r => r.json())
+      .then(d => { setAccount(d.account ?? null); setAccountLoading(false); })
+      .catch(() => setAccountLoading(false));
+  }, [pathname]); // re-check on route change
+
+  async function handleLogout() {
+    await fetch('/api/account/logout', { method: 'POST' });
+    setAccount(null);
+    router.push('/');
+    router.refresh();
+  }
 
   // Lock body scroll when sidebar is open
   useEffect(() => {
@@ -123,8 +146,52 @@ export default function Navbar() {
           <div className="mobile-hidden" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
             <NotificationBell />
             <ThemeToggle />
+            {!accountLoading && (
+              account ? (
+                /* Logged-in: avatar + username dropdown trigger */
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Link
+                    href={`/profile/${encodeURIComponent(account.username)}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      padding: '0.35rem 0.75rem 0.35rem 0.35rem',
+                      borderRadius: 'var(--radius-full)',
+                      background: 'var(--card-bg)', border: '1px solid var(--card-border)',
+                      transition: 'all var(--transition-fast)',
+                    }}
+                  >
+                    {/* Mini avatar */}
+                    <div style={{
+                      width: '26px', height: '26px', borderRadius: '50%',
+                      background: 'var(--accent-gradient)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '0.7rem', fontWeight: 800, color: '#05130a',
+                      flexShrink: 0,
+                    }}>
+                      {account.username.charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {account.username}
+                    </span>
+                  </Link>
+                  <button onClick={handleLogout} title="Sign out"
+                    style={{ padding: '0.35rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                /* Not logged in */
+                <Link href="/signin" className="btn btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.82rem' }}>
+                  Sign In
+                </Link>
+              )
+            )}
             <Link href="/login" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.82rem' }}>
-              Staff Login
+              Staff
             </Link>
           </div>
 
@@ -307,17 +374,36 @@ export default function Navbar() {
           flexDirection: 'column',
           gap: '0.6rem',
         }}>
-          <Link
-            href="/login"
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '0.75rem' }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline points="10 17 15 12 10 7"/>
-              <line x1="15" y1="12" x2="3" y2="12"/>
-            </svg>
-            Staff Login
+          {!accountLoading && (
+            account ? (
+              <>
+                <Link href={`/profile/${encodeURIComponent(account.username)}`}
+                  className="btn btn-secondary"
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.65rem' }}>
+                  <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#05130a' }}>
+                    {account.username.charAt(0).toUpperCase()}
+                  </div>
+                  {account.username}
+                </Link>
+                <button onClick={handleLogout}
+                  className="btn btn-ghost"
+                  style={{ width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.82rem', color: '#f87171' }}>
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link href="/signin" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.75rem' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Sign In
+              </Link>
+            )
+          )}
+          <Link href="/login" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', padding: '0.5rem', fontSize: '0.78rem' }}>
+            Staff portal
           </Link>
           <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-tertiary)', margin: 0 }}>
             © {new Date().getFullYear()} nova-browser
