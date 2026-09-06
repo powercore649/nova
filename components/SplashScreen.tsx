@@ -15,7 +15,7 @@ export default function SplashScreen() {
   const [msgIndex, setMsgIndex] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
 
-  const DURATION = 2500; // ms
+  const DURATION = 20000; // ms
 
   useEffect(() => {
     // Only show once per session
