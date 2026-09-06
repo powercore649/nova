@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Comment from '@/models/Comment';
+import Notification from '@/models/Notification';
 
 export const dynamic = 'force-dynamic';
 
@@ -59,6 +60,18 @@ export async function POST(req: NextRequest) {
       username: displayName,
       text: String(text).trim(),
     });
+
+    // Emit notification for new comment
+    try {
+      await Notification.create({
+        type: 'new_comment',
+        title: '💬 New comment',
+        message: `${displayName} commented on a ${targetType}.`,
+        targetId: targetIdStr,
+        targetType: String(targetType) as 'project' | 'file',
+        targetName: displayName,
+      });
+    } catch { /* non-blocking */ }
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Snippet from '@/models/Snippet';
+import Notification from '@/models/Notification';
 import { jwtVerify } from 'jose';
 import { JWT_SECRET } from '@/lib/auth-config';
 
@@ -26,7 +27,6 @@ export async function POST(req: Request) {
         const { title, description, code, language, tags, downloadUrl, youtubeUrl } = await req.json();
         await dbConnect();
 
-        // Split tags string into array if needed
         const tagsArray = Array.isArray(tags) ? tags : tags?.split(',').map((t: string) => t.trim());
 
         const snippet = await Snippet.create({
@@ -39,6 +39,18 @@ export async function POST(req: Request) {
             youtubeUrl,
         });
 
+        // Emit notification for new project
+        try {
+            await Notification.create({
+                type: 'new_project',
+                title: '📦 New project published',
+                message: `"${title}" was just added to the library.`,
+                targetId: String(snippet._id),
+                targetType: 'project',
+                targetName: title,
+            });
+        } catch { /* non-blocking */ }
+
         return NextResponse.json({ success: true, snippet });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create snippet' }, { status: 500 });
@@ -46,8 +58,6 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-    // Public can read, so no auth check strictly needed for GET, but maybe dashboard needs all?
-    // Use query param to filter if needed.
     try {
         await dbConnect();
         const snippets = await Snippet.find({}).sort({ createdAt: -1 });

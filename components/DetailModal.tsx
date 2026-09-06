@@ -318,6 +318,43 @@ export default function DetailModal({ item, onClose }: { item: DetailItem; onClo
     const isProject = item.kind === 'project';
     const displayTitle = isProject ? item.title : item.originalName;
     const embedUrl = toYoutubeEmbedUrl(item.youtubeUrl);
+    const targetType = isProject ? 'project' : 'file';
+    const targetId = String(item._id);
+
+    const [bookmarked, setBookmarked] = useState(false);
+    const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+    useEffect(() => {
+        const key = localStorage.getItem('nova-voter-key') || '';
+        if (!key) return;
+        fetch(`/api/favorites?voterKey=${encodeURIComponent(key)}&targetType=${targetType}`)
+            .then(r => r.json())
+            .then(d => {
+                const favs: any[] = d.favorites || [];
+                setBookmarked(favs.some((f: any) => f.targetId === targetId));
+            })
+            .catch(() => {});
+    }, [targetId, targetType]);
+
+    async function toggleBookmark() {
+        let key = localStorage.getItem('nova-voter-key');
+        if (!key) {
+            key = `voter-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+            localStorage.setItem('nova-voter-key', key);
+        }
+        setBookmarkLoading(true);
+        try {
+            const res = await fetch('/api/favorites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetType, targetId, voterKey: key }),
+            });
+            const data = await res.json();
+            if (res.ok) setBookmarked(data.bookmarked);
+        } catch { /* silent */ } finally {
+            setBookmarkLoading(false);
+        }
+    }
 
     const downloadHref = isProject
         ? item.downloadUrl
@@ -426,6 +463,29 @@ export default function DetailModal({ item, onClose }: { item: DetailItem; onClo
                             Voir en direct →
                         </Link>
                     )}
+                    {/* Bookmark button */}
+                    <button
+                        onClick={() => toggleBookmark()}
+                        disabled={bookmarkLoading}
+                        title={bookmarked ? 'Remove bookmark' : 'Bookmark this'}
+                        style={{
+                            padding: '0.75rem',
+                            borderRadius: 'var(--radius-md)',
+                            border: bookmarked ? '1px solid rgba(251,191,36,0.4)' : '1px solid var(--card-border)',
+                            background: bookmarked ? 'rgba(251,191,36,0.1)' : 'var(--card-bg)',
+                            cursor: bookmarkLoading ? 'wait' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all var(--transition-fast)',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24"
+                            fill={bookmarked ? '#fbbf24' : 'none'}
+                            stroke={bookmarked ? '#fbbf24' : 'var(--text-secondary)'}
+                            strokeWidth="2">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </button>
                 </div>
 
                 {/* Interactions — comments, ratings, collections for both projects and files */}

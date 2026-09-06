@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { ThemeToggle } from '@/components/ThemeProvider';
+import NotificationBell from '@/components/NotificationBell';
 
 const LINKS = [
   { href: '/',             label: 'Home' },
@@ -12,6 +13,7 @@ const LINKS = [
   { href: '/files',        label: 'Files' },
   { href: '/upload',       label: 'Upload' },
   { href: '/collections',  label: 'Collections' },
+  { href: '/bookmarks',    label: 'Bookmarks' },
   { href: '/leaderboard',  label: 'Leaderboard' },
   { href: '/roadmap',      label: 'Roadmap' },
   { href: '/changelogs',   label: 'Changelog' },
@@ -119,6 +121,7 @@ export default function Navbar() {
 
           {/* Desktop right actions */}
           <div className="mobile-hidden" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
+            <NotificationBell />
             <ThemeToggle />
             <Link href="/login" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.82rem' }}>
               Staff Login
@@ -127,6 +130,7 @@ export default function Navbar() {
 
           {/* Mobile right: theme toggle + hamburger */}
           <div className="desktop-hidden" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <NotificationBell />
             <ThemeToggle />
             <button
               onClick={() => setOpen(true)}
