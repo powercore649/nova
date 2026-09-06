@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import DetailModal, { DetailItem } from '@/components/DetailModal';
 import Navbar from '@/components/Navbar';
-
 interface FileItem {
     _id: string;
     filename: string;
@@ -133,8 +132,8 @@ export default function FilesPage() {
                         <div
                             key={file._id}
                             className="glass-card"
-                            onClick={() => setDetail(file)}
                             style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
+                            onClick={() => setDetail(file)}
                         >
                             {/* Thumbnail */}
                             <div
@@ -191,15 +190,29 @@ export default function FilesPage() {
                                 {file.downloads} download{file.downloads === 1 ? '' : 's'}
                             </p>
 
-                            <a
-                                href={`/api/files/${file._id}/download`}
-                                download={file.originalName}
-                                onClick={(e) => e.stopPropagation()}
-                                className="btn btn-secondary"
-                                style={{ marginTop: 'auto', fontSize: '0.85rem', padding: '0.6rem 1rem' }}
-                            >
-                                Download
-                            </a>
+                            <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                                <Link
+                                    href={`/files/${file._id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="btn btn-ghost"
+                                    style={{ fontSize: '0.85rem', padding: '0.6rem 1rem', flex: 1, justifyContent: 'center' }}
+                                >
+                                    View →
+                                </Link>
+                                <a
+                                    href={`/api/files/${file._id}/download`}
+                                    download={file.originalName}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.85rem', padding: '0.6rem 1rem' }}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                </a>
+                            </div>
                         </div>
                     ))}
                 </div>

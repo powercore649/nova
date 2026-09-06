@@ -9,6 +9,7 @@ export interface IFile extends Document {
     fileSize: number;
     thumbnailUrl?: string;
     youtubeUrl?: string;
+    accentColor?: string;
     uploadedBy: string;
     downloads: number;
     createdAt: Date;
@@ -25,6 +26,7 @@ const FileSchema: Schema = new Schema(
         fileSize: { type: Number, required: true },
         thumbnailUrl: { type: String, default: '' },
         youtubeUrl: { type: String, default: '' },
+        accentColor: { type: String, default: '' },
         uploadedBy: { type: String, default: 'admin' },
         downloads: { type: Number, default: 0 },
     },

@@ -36,12 +36,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     try {
-        const { youtubeUrl } = await req.json();
+        const { youtubeUrl, accentColor } = await req.json();
         await dbConnect();
 
         const file = await File.findByIdAndUpdate(
             id,
-            { youtubeUrl },
+            { youtubeUrl, accentColor: accentColor || '' },
             { new: true }
         );
 
