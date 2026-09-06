@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useAccount } from '@/lib/useAccount';
 
 interface Comment {
   _id: string;
@@ -25,6 +26,7 @@ function getVoterKey(): string {
 }
 
 export default function ProjectInteractions({ projectId, projectTitle }: Props) {
+  const account = useAccount();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'comments' | 'ratings' | 'collections'>('comments');
 
@@ -32,7 +34,6 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState('');
-  const [commentName, setCommentName] = useState('');
   const [commentPosting, setCommentPosting] = useState(false);
   const [commentMsg, setCommentMsg] = useState('');
 
@@ -48,7 +49,6 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
   const [collectionsLoading, setCollectionsLoading] = useState(false);
   const [newColName, setNewColName] = useState('');
   const [newColDesc, setNewColDesc] = useState('');
-  const [newColAuthor, setNewColAuthor] = useState('');
   const [colMsg, setColMsg] = useState('');
 
   // Load ratings on mount
@@ -93,7 +93,7 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
           targetType: 'project',
           targetId: projectId,
           text: commentText.trim(),
-          username: commentName.trim() || 'Anonymous',
+          username: account?.username || 'Anonymous',
         }),
       });
       const data = await res.json();
@@ -160,7 +160,7 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
         body: JSON.stringify({
           name: newColName.trim(),
           description: newColDesc.trim(),
-          username: newColAuthor.trim() || 'Anonymous',
+          username: account?.username || 'Anonymous',
           projectIds: [projectId],
         }),
       });
@@ -169,7 +169,6 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
       setCollections(prev => [data.collection, ...prev]);
       setNewColName('');
       setNewColDesc('');
-      setNewColAuthor('');
       setColMsg('✓ Collection created with this project');
       setTimeout(() => setColMsg(''), 3000);
     } catch (e: any) {
@@ -254,13 +253,18 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {/* Post form */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <input
-                    placeholder="Your name (optional)"
-                    value={commentName}
-                    onChange={e => setCommentName(e.target.value)}
-                    maxLength={32}
-                    style={{ padding: '0.5rem 0.75rem', fontSize: '0.85rem', borderRadius: 'var(--radius-sm)', background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}
-                  />
+                  {/* Show who is commenting */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0.6rem', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: '#05130a', flexShrink: 0 }}>
+                      {(account?.username || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: account ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+                      {account ? account.username : 'Anonymous — sign in to link your profile'}
+                    </span>
+                    {!account && (
+                      <a href="/signin" style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Sign in →</a>
+                    )}
+                  </div>
                   <textarea
                     placeholder="Leave a comment…"
                     value={commentText}
@@ -376,8 +380,11 @@ export default function ProjectInteractions({ projectId, projectTitle }: Props) 
                     style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px', background: 'var(--bg-tertiary)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}/>
                   <input placeholder="Description (optional)" value={newColDesc} onChange={e => setNewColDesc(e.target.value)} maxLength={500}
                     style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px', background: 'var(--bg-tertiary)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}/>
-                  <input placeholder="Your name (optional)" value={newColAuthor} onChange={e => setNewColAuthor(e.target.value)} maxLength={32}
-                    style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px', background: 'var(--bg-tertiary)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}/>
+                  {account && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', padding: '0.2rem 0.1rem' }}>
+                      Saved as <strong style={{ color: 'var(--accent-primary)' }}>{account.username}</strong>
+                    </div>
+                  )}
                   <button onClick={createCollection} disabled={!newColName.trim()}
                     style={{ padding: '0.4rem', background: 'var(--accent-gradient)', border: 'none', borderRadius: '6px', color: '#05130a', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', opacity: !newColName.trim() ? 0.5 : 1 }}>
                     Create & add this project

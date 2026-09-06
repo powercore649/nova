@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useAccount } from '@/lib/useAccount';
 
 export interface DetailItem {
     _id: string;
@@ -67,6 +68,7 @@ interface Comment {
 function InteractionsPanel({ item }: { item: DetailItem }) {
     const targetType = item.kind === 'project' ? 'project' : 'file';
     const targetId = String(item._id);
+    const account = useAccount();
 
     const [tab, setTab] = useState<'comments' | 'ratings' | 'collections'>('comments');
 
@@ -74,7 +76,6 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
     const [comments, setComments] = useState<Comment[]>([]);
     const [commentsLoading, setCommentsLoading] = useState(false);
     const [commentText, setCommentText] = useState('');
-    const [commentName, setCommentName] = useState('');
     const [commentPosting, setCommentPosting] = useState(false);
     const [commentMsg, setCommentMsg] = useState('');
 
@@ -90,7 +91,6 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
     const [collectionsLoading, setCollectionsLoading] = useState(false);
     const [newColName, setNewColName] = useState('');
     const [newColDesc, setNewColDesc] = useState('');
-    const [newColAuthor, setNewColAuthor] = useState('');
     const [colMsg, setColMsg] = useState('');
 
     useEffect(() => {
@@ -132,7 +132,7 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
                     targetType,
                     targetId,
                     text: commentText.trim(),
-                    username: commentName.trim() || 'Anonymous',
+                    username: account?.username || 'Anonymous',
                 }),
             });
             const data = await res.json();
@@ -177,7 +177,7 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
         const res = await fetch('/api/collections', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newColName.trim(), description: newColDesc.trim(), username: newColAuthor.trim() || 'Anonymous', projectIds: [targetId] }),
+            body: JSON.stringify({ name: newColName.trim(), description: newColDesc.trim(), username: account?.username || 'Anonymous', projectIds: [targetId] }),
         });
         const data = await res.json();
         if (res.ok) {
@@ -214,8 +214,18 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
             {/* Comments */}
             {tab === 'comments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                    <input placeholder="Your name (optional)" value={commentName} onChange={e => setCommentName(e.target.value)} maxLength={32}
-                        style={{ padding: '0.45rem 0.7rem', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', outline: 'none' }}/>
+                    {/* Identity row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.6rem', background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'var(--accent-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 800, color: '#05130a', flexShrink: 0 }}>
+                            {(account?.username || 'A').charAt(0).toUpperCase()}
+                        </div>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: account ? 'var(--accent-primary)' : 'var(--text-tertiary)' }}>
+                            {account ? account.username : 'Anonymous'}
+                        </span>
+                        {!account && (
+                            <a href="/signin" style={{ marginLeft: 'auto', fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Sign in →</a>
+                        )}
+                    </div>
                     <textarea placeholder="Leave a comment…" value={commentText} onChange={e => setCommentText(e.target.value)} maxLength={1000} rows={2}
                         style={{ padding: '0.45rem 0.7rem', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', resize: 'none', fontFamily: 'inherit', outline: 'none' }}/>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -285,8 +295,11 @@ function InteractionsPanel({ item }: { item: DetailItem }) {
                         <p style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Create new</p>
                         <input placeholder="Name *" value={newColName} onChange={e => setNewColName(e.target.value)} maxLength={100}
                             style={{ padding: '0.35rem 0.6rem', fontSize: '0.78rem', borderRadius: '6px', background: 'var(--bg-tertiary)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', outline: 'none' }}/>
-                        <input placeholder="Your name (optional)" value={newColAuthor} onChange={e => setNewColAuthor(e.target.value)} maxLength={32}
-                            style={{ padding: '0.35rem 0.6rem', fontSize: '0.78rem', borderRadius: '6px', background: 'var(--bg-tertiary)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', outline: 'none' }}/>
+                        {account && (
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)', padding: '0.1rem 0.1rem' }}>
+                                Saved as <strong style={{ color: 'var(--accent-primary)' }}>{account.username}</strong>
+                            </div>
+                        )}
                         <button onClick={createCollection} disabled={!newColName.trim()}
                             style={{ padding: '0.35rem', background: 'var(--accent-gradient)', border: 'none', borderRadius: '6px', color: '#05130a', fontWeight: 600, fontSize: '0.78rem', cursor: 'pointer', opacity: !newColName.trim() ? 0.5 : 1 }}>
                             Create & save this file
