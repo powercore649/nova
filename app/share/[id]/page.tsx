@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import { useToast } from '@/components/Toast';
+import QRCode from '@/components/QRCode';
 
 const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://novacorpbumpify.dpdns.org';
 
@@ -12,7 +13,6 @@ export default function SharePage() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [qrSrc, setQrSrc] = useState('');
   const { success, error } = useToast();
 
   const url = `${SITE_URL}/project/${id}`;
@@ -23,12 +23,6 @@ export default function SharePage() {
       .then(d => { setProject(d.project); setLoading(false); })
       .catch(() => setLoading(false));
   }, [id]);
-
-  // Generate QR using a free API
-  useEffect(() => {
-    if (!url) return;
-    setQrSrc(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}&bgcolor=080c09&color=22c55e&format=png&margin=12`);
-  }, [url]);
 
   async function copy(text: string, label: string) {
     try {
@@ -95,14 +89,8 @@ export default function SharePage() {
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '2rem', alignItems: 'start' }}>
-          {/* QR Code */}
           <div className="glass-card-static" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', borderRadius: 'var(--radius-lg)' }}>
-            {qrSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={qrSrc} alt="QR Code" width={160} height={160} style={{ borderRadius: 'var(--radius-md)', display: 'block' }} />
-            ) : (
-              <div className="skeleton" style={{ width: '160px', height: '160px', borderRadius: 'var(--radius-md)' }} />
-            )}
+            <QRCode value={url} size={160} bgColor="#080c09" fgColor="#22c55e" />
             <span style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>Scan to open</span>
           </div>
 
