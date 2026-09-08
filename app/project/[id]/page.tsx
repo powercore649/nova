@@ -4,6 +4,8 @@ import Snippet from '@/models/Snippet';
 import { notFound } from 'next/navigation';
 import type { Metadata, ResolvingMetadata } from 'next';
 import ProjectInteractions from '@/components/ProjectInteractions';
+import ProjectPageClient from '@/components/ProjectPageClient';
+import RelatedProjects from './related';
 
 export const dynamic = 'force-dynamic';
 
@@ -169,14 +171,21 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <Link href="/" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>&larr; Back</Link>
                     <span style={{ fontWeight: 600 }}>{project.title}</span>
                 </div>
-                <ProjectInteractions projectId={String((project as any)._id.toString ? (project as any)._id.toString() : (project as any)._id)} projectTitle={project.title as string} />
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <ProjectPageClient code={project.code as string} projectId={String((project as any)._id)} />
+                    <ProjectInteractions projectId={String((project as any)._id.toString ? (project as any)._id.toString() : (project as any)._id)} projectTitle={project.title as string} />
+                </div>
             </nav>
             <iframe
                 srcDoc={previewContent}
                 style={{ flex: 1, width: '100%', border: 'none', background: 'var(--bg-dark)' }}
                 title="Preview"
-                // We allow scripts/modals so the user's HTML can be interactive
                 sandbox="allow-scripts allow-modals allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+            />
+            <RelatedProjects
+                currentId={String((project as any)._id)}
+                tags={(project as any).tags || []}
+                language={(project as any).language || ''}
             />
         </div>
     );

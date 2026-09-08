@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { JetBrains_Mono } from 'next/font/google';
 import BackgroundProvider from '@/components/BackgroundProvider';
 import ThemeProvider from '@/components/ThemeProvider';
+import ToastProvider from '@/components/Toast';
 import KeyboardShortcuts from '@/components/KeyboardShortcuts';
 import SplashScreen from '@/components/SplashScreen';
 import OfflineDetector from '@/components/OfflineDetector';
@@ -44,11 +45,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={jetbrainsMono.className}>
         <ThemeProvider>
-          <SplashScreen />
-          <OfflineDetector />
-          <BackgroundProvider />
-          <KeyboardShortcuts />
-          {children}
+          <ToastProvider>
+            <SplashScreen />
+            <OfflineDetector />
+            <BackgroundProvider />
+            <KeyboardShortcuts />
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
