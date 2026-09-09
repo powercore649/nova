@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aws-sdk/rds-signer": "3.1128.0",
+    "@libsql/client": "0.18.0",
     "@types/pg": "8.23.1",
     "@uploadthing/react": "^7.3.3",
     "@vercel/postgres": "0.10.0",
