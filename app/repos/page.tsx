@@ -44,24 +44,29 @@ export default function ReposPage() {
 
   async function createRepo() {
     if (!form.name.trim()) { error('Name is required'); return; }
+    if (!form.ownerName.trim()) { error('Owner name is required'); return; }
     setCreating(true);
     try {
       const res = await fetch('/api/repos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          readme: form.readme || `# ${form.name}\n\n${form.description || 'A nova-browser repository.'}\n`,
+          name: form.name.trim(),
+          description: form.description.trim(),
+          visibility: form.visibility,
+          ownerName: form.ownerName.trim(),
+          readme: form.readme || `# ${form.name.trim()}\n\n${form.description.trim() || 'A nova-browser repository.'}\n`,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
+      let data: any = {};
+      try { data = await res.json(); } catch { /* non-json response */ }
+      if (!res.ok) throw new Error(data.error || `Server error ${res.status}` + (data.details ? ` — ${data.details}` : ''));
       success('Repository created!');
       setRepos(prev => [data.repo, ...prev]);
       setShowCreate(false);
       setForm({ name: '', description: '', visibility: 'public', ownerName: '', readme: '' });
     } catch (e: any) {
-      error(e.message);
+      error(e.message || 'Network error — check your connection');
     } finally {
       setCreating(false);
     }
