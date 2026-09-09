@@ -26,13 +26,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const file = await sql`SELECT path FROM repo_files WHERE id = ${fileId} AND repo_id = ${id} LIMIT 1`;
     if (!file.rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const path = file.rows[0].path;
+    const filePath = String(file.rows[0].path);
     await sql`DELETE FROM repo_files WHERE id = ${fileId}`;
 
     const sha = crypto.randomBytes(20).toString('hex');
+    const message = `Delete ${filePath}`;
+    // Pass array as PostgreSQL literal: '{path}'
+    const filesChangedLiteral = `{${filePath.replace(/[{}]/g, '')}}`;
+
     await sql`
       INSERT INTO repo_commits (repo_id, message, uploader_name, files_changed, files_deleted, sha)
-      VALUES (${id}, ${`Delete ${path}`}, ${uploaderName}, ${[path]}, ${1}, ${sha})
+      VALUES (${id}, ${message}, ${uploaderName}, ${filesChangedLiteral}, ${1}, ${sha})
     `;
     await sql`UPDATE repos SET updated_at = NOW() WHERE id = ${id}`;
 

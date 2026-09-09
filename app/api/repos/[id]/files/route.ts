@@ -102,11 +102,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       changedPaths.push(fullPath);
     }
 
-    // Create commit
+    // Create commit — pass array as PostgreSQL literal
     const sha = crypto.randomBytes(20).toString('hex');
+    const filesLiteral = `{${changedPaths.map(p => p.replace(/[{},"\\]/g, '')).join(',')}}`;
     await sql`
       INSERT INTO repo_commits (repo_id, message, uploader_name, uploader_id, files_changed, files_added, files_modified, files_deleted, sha)
-      VALUES (${id}, ${commitMessage}, ${uploaderName}, ${uploaderId}, ${changedPaths}, ${added}, ${modified}, ${0}, ${sha})
+      VALUES (${id}, ${commitMessage}, ${uploaderName}, ${uploaderId}, ${filesLiteral}, ${added}, ${modified}, ${0}, ${sha})
     `;
 
     // Update repo updated_at
