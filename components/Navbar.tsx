@@ -14,6 +14,7 @@ interface Account {
 const LINKS = [
   { href: '/',             label: 'Home' },
   { href: '/browse',       label: 'Browse' },
+  { href: '/repos',        label: 'Repos' },
   { href: '/docs',         label: 'Docs' },
   { href: '/files',        label: 'Files' },
   { href: '/upload',       label: 'Upload' },
