@@ -139,7 +139,7 @@ function buildZip(entries: { path: string; data: Uint8Array }[]): ArrayBuffer {
     u16(0),
   ]);
 
-  return concat([...parts, cdBytes, eocd]).buffer;
+  return concat([...parts, cdBytes, eocd]).buffer as ArrayBuffer;
 }
 
 function concat(arrays: Uint8Array[]): Uint8Array {
