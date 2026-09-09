@@ -1,50 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import RepoFile from '@/models/RepoFile';
-import RepoCommit from '@/models/RepoCommit';
+import { sql, initRepoTables, rowToFile } from '@/lib/pg';
 import crypto from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/repos/[id]/files/[fileId] — get file content
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string; fileId: string }> }) {
   const { id, fileId } = await params;
   try {
-    await dbConnect();
-    const file = await RepoFile.findOne({ _id: fileId, repoId: id }).lean();
-    if (!file) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ file });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    await initRepoTables();
+    const result = await sql`SELECT * FROM repo_files WHERE id = ${fileId} AND repo_id = ${id} LIMIT 1`;
+    if (!result.rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ file: rowToFile(result.rows[0]) });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-// DELETE /api/repos/[id]/files/[fileId]
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string; fileId: string }> }) {
   const { id, fileId } = await params;
   try {
     const body = await req.json().catch(() => ({}));
     const uploaderName = (body.uploaderName || 'Anonymous').slice(0, 32);
 
-    await dbConnect();
-    const file = await RepoFile.findOneAndDelete({ _id: fileId, repoId: id });
-    if (!file) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    await initRepoTables();
+    const file = await sql`SELECT path FROM repo_files WHERE id = ${fileId} AND repo_id = ${id} LIMIT 1`;
+    if (!file.rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    // Commit record for deletion
-    await RepoCommit.create({
-      repoId: id,
-      message: `Delete ${file.path}`,
-      uploaderName,
-      uploaderId: '',
-      filesChanged: [file.path],
-      filesAdded: 0,
-      filesModified: 0,
-      filesDeleted: 1,
-      sha: crypto.randomBytes(20).toString('hex'),
-    });
+    const path = file.rows[0].path;
+    await sql`DELETE FROM repo_files WHERE id = ${fileId}`;
+
+    const sha = crypto.randomBytes(20).toString('hex');
+    await sql`
+      INSERT INTO repo_commits (repo_id, message, uploader_name, files_changed, files_deleted, sha)
+      VALUES (${id}, ${`Delete ${path}`}, ${uploaderName}, ${[path]}, ${1}, ${sha})
+    `;
+    await sql`UPDATE repos SET updated_at = NOW() WHERE id = ${id}`;
 
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }

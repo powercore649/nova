@@ -1,48 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Repo from '@/models/Repo';
-import RepoFile from '@/models/RepoFile';
+import { sql, initRepoTables } from '@/lib/pg';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/repos/[id]/download — stream a ZIP of all repo files
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    await dbConnect();
+    await initRepoTables();
 
-    const [repo, files] = await Promise.all([
-      Repo.findById(id).lean(),
-      RepoFile.find({ repoId: id }).lean(),
+    const [repoRes, filesRes] = await Promise.all([
+      sql`SELECT * FROM repos WHERE id = ${id} LIMIT 1`,
+      sql`SELECT path, name, content, is_text FROM repo_files WHERE repo_id = ${id}`,
     ]);
 
-    if (!repo) return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
-
-    // Build a simple ZIP in pure JS (no dependencies)
-    // Using the ZIP spec directly
-    const repoName = `${(repo as any).ownerName}-${(repo as any).name}`;
+    if (!repoRes.rows.length) return NextResponse.json({ error: 'Repo not found' }, { status: 404 });
+    const repo = repoRes.rows[0];
+    const repoName = `${repo.owner_name}-${repo.name}`;
 
     const entries: { path: string; data: Uint8Array }[] = [];
 
-    for (const file of files) {
-      const f = file as any;
+    for (const file of filesRes.rows) {
       let data: Uint8Array;
-
-      if (f.isText || !f.content.startsWith('data:')) {
-        data = new TextEncoder().encode(f.content);
+      if (file.is_text || !String(file.content).startsWith('data:')) {
+        data = new TextEncoder().encode(file.content);
       } else {
-        // base64 data URL
-        const base64 = f.content.split(',')[1] ?? '';
+        const base64 = String(file.content).split(',')[1] ?? '';
         data = Buffer.from(base64, 'base64');
       }
-
-      entries.push({ path: `${repoName}/${f.path}`, data });
+      entries.push({ path: `${repoName}/${file.path}`, data });
     }
 
-    // Add README if not already a file
     const hasReadme = entries.some(e => e.path.toLowerCase().endsWith('readme.md'));
-    if (!hasReadme && (repo as any).readme) {
-      entries.push({ path: `${repoName}/README.md`, data: new TextEncoder().encode((repo as any).readme) });
+    if (!hasReadme && repo.readme) {
+      entries.push({ path: `${repoName}/README.md`, data: new TextEncoder().encode(repo.readme) });
     }
 
     const zipBytes = buildZip(entries);
@@ -55,36 +45,21 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       },
     });
   } catch (error) {
-    console.error('ZIP error:', error);
-    return NextResponse.json({ error: 'Failed to create ZIP' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create ZIP', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-/** Pure JS ZIP builder — no dependencies */
 function buildZip(entries: { path: string; data: Uint8Array }[]): ArrayBuffer {
   const parts: Uint8Array[] = [];
   const centralDir: Uint8Array[] = [];
   let offset = 0;
 
-  function u16(n: number) {
-    const b = new Uint8Array(2);
-    new DataView(b.buffer).setUint16(0, n, true);
-    return b;
-  }
-  function u32(n: number) {
-    const b = new Uint8Array(4);
-    new DataView(b.buffer).setUint32(0, n, true);
-    return b;
-  }
+  function u16(n: number) { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, n, true); return b; }
+  function u32(n: number) { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); return b; }
 
-  // Simple CRC-32
   const crcTable = (() => {
     const t = new Uint32Array(256);
-    for (let i = 0; i < 256; i++) {
-      let c = i;
-      for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-      t[i] = c;
-    }
+    for (let i = 0; i < 256; i++) { let c = i; for (let j = 0; j < 8; j++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[i] = c; }
     return t;
   })();
 
@@ -102,41 +77,27 @@ function buildZip(entries: { path: string; data: Uint8Array }[]): ArrayBuffer {
     const nameBytes = new TextEncoder().encode(entry.path);
     const crc = crc32(entry.data);
     const size = entry.data.length;
-
-    // Local file header
     const localHeader = concat([
-      new Uint8Array([0x50, 0x4b, 0x03, 0x04]), // signature
-      u16(20), u16(0), u16(0),                   // version, flags, compression (store)
-      u16(dosTime), u16(dosDate),                // time, date
-      u32(crc), u32(size), u32(size),            // crc, compressed, uncompressed
-      u16(nameBytes.length), u16(0),             // name len, extra len
-      nameBytes,
+      new Uint8Array([0x50, 0x4b, 0x03, 0x04]),
+      u16(20), u16(0), u16(0), u16(dosTime), u16(dosDate),
+      u32(crc), u32(size), u32(size), u16(nameBytes.length), u16(0), nameBytes,
     ]);
-
     parts.push(localHeader);
     parts.push(entry.data);
-
-    // Central directory entry
-    const cdEntry = concat([
+    centralDir.push(concat([
       new Uint8Array([0x50, 0x4b, 0x01, 0x02]),
-      u16(20), u16(20), u16(0), u16(0),
-      u16(dosTime), u16(dosDate),
+      u16(20), u16(20), u16(0), u16(0), u16(dosTime), u16(dosDate),
       u32(crc), u32(size), u32(size),
-      u16(nameBytes.length), u16(0), u16(0), u16(0), u16(0),
-      u32(0), u32(offset),
-      nameBytes,
-    ]);
-    centralDir.push(cdEntry);
+      u16(nameBytes.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset), nameBytes,
+    ]));
     offset += localHeader.byteLength + size;
   }
 
   const cdBytes = concat(centralDir);
   const eocd = concat([
     new Uint8Array([0x50, 0x4b, 0x05, 0x06]),
-    u16(0), u16(0),
-    u16(entries.length), u16(entries.length),
-    u32(cdBytes.byteLength), u32(offset),
-    u16(0),
+    u16(0), u16(0), u16(entries.length), u16(entries.length),
+    u32(cdBytes.byteLength), u32(offset), u16(0),
   ]);
 
   return concat([...parts, cdBytes, eocd]).buffer as ArrayBuffer;

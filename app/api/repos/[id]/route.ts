@@ -1,60 +1,55 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Repo from '@/models/Repo';
-import RepoFile from '@/models/RepoFile';
-import RepoCommit from '@/models/RepoCommit';
+import { sql, initRepoTables, rowToRepo } from '@/lib/pg';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/repos/[id]
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    await dbConnect();
-    const repo = await Repo.findById(id).lean();
-    if (!repo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    if ((repo as any).visibility === 'private') {
-      // Could add owner check here — for now private repos are viewable by URL
-    }
-    return NextResponse.json({ repo });
-  } catch {
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 });
+    await initRepoTables();
+    const result = await sql`SELECT * FROM repos WHERE id = ${id} LIMIT 1`;
+    if (!result.rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ repo: rowToRepo(result.rows[0]) });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-// PATCH /api/repos/[id] — update description, readme, visibility
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
     const body = await req.json();
-    const { description, readme, visibility, stars } = body;
-    const update: any = {};
-    if (description !== undefined) update.description = String(description).slice(0, 500);
-    if (readme !== undefined) update.readme = String(readme);
-    if (visibility !== undefined) update.visibility = visibility === 'private' ? 'private' : 'public';
-    if (typeof stars === 'number') update.stars = stars;
+    await initRepoTables();
 
-    await dbConnect();
-    const repo = await Repo.findByIdAndUpdate(id, { $set: update }, { new: true });
-    if (!repo) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ repo });
-  } catch {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+    if (body.stars !== undefined) {
+      await sql`UPDATE repos SET stars = ${body.stars}, updated_at = NOW() WHERE id = ${id}`;
+    }
+    if (body.description !== undefined) {
+      await sql`UPDATE repos SET description = ${String(body.description).slice(0, 500)}, updated_at = NOW() WHERE id = ${id}`;
+    }
+    if (body.readme !== undefined) {
+      await sql`UPDATE repos SET readme = ${String(body.readme)}, updated_at = NOW() WHERE id = ${id}`;
+    }
+    if (body.visibility !== undefined) {
+      await sql`UPDATE repos SET visibility = ${body.visibility === 'private' ? 'private' : 'public'}, updated_at = NOW() WHERE id = ${id}`;
+    }
+
+    const result = await sql`SELECT * FROM repos WHERE id = ${id} LIMIT 1`;
+    if (!result.rows.length) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ repo: rowToRepo(result.rows[0]) });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-// DELETE /api/repos/[id] — delete repo + all files + commits
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    await dbConnect();
-    await Promise.all([
-      Repo.findByIdAndDelete(id),
-      RepoFile.deleteMany({ repoId: id }),
-      RepoCommit.deleteMany({ repoId: id }),
-    ]);
+    await initRepoTables();
+    // CASCADE deletes files and commits
+    await sql`DELETE FROM repos WHERE id = ${id}`;
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }

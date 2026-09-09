@@ -1,67 +1,72 @@
 import { NextRequest, NextResponse } from 'next/server';
-import dbConnect from '@/lib/db';
-import Repo from '@/models/Repo';
+import { sql, initRepoTables, rowToRepo } from '@/lib/pg';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/repos — list public repos (or all if ownerName filter)
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const owner = searchParams.get('owner');
-  const search = searchParams.get('q');
+  const search = searchParams.get('q') || '';
 
   try {
-    await dbConnect();
-    const filter: any = { visibility: 'public' };
-    if (owner) filter.ownerName = owner;
-    if (search) filter.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { description: { $regex: search, $options: 'i' } },
-    ];
+    await initRepoTables();
 
-    const repos = await Repo.find(filter)
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
+    let rows;
+    if (search) {
+      rows = await sql`
+        SELECT * FROM repos
+        WHERE visibility = 'public'
+          AND (name ILIKE ${'%' + search + '%'} OR description ILIKE ${'%' + search + '%'})
+        ORDER BY created_at DESC LIMIT 50
+      `;
+    } else {
+      rows = await sql`
+        SELECT * FROM repos WHERE visibility = 'public'
+        ORDER BY created_at DESC LIMIT 50
+      `;
+    }
 
-    return NextResponse.json({ repos });
+    return NextResponse.json({ repos: rows.rows.map(rowToRepo) });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch repos' }, { status: 500 });
+    console.error('Repos GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch repos', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
 
-// POST /api/repos — create a new repo (public, no auth required)
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    let body: any = {};
+    try { body = await req.json(); } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
     const { name, description, visibility, ownerName, readme } = body;
 
     if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     if (!/^[a-zA-Z0-9_.-]+$/.test(name.trim())) {
       return NextResponse.json({ error: 'Name can only contain letters, numbers, hyphens, underscores and dots' }, { status: 400 });
     }
+    if (!ownerName?.trim()) return NextResponse.json({ error: 'Owner name is required' }, { status: 400 });
 
-    const owner = (ownerName?.trim() || 'Anonymous').slice(0, 32);
+    const owner = ownerName.trim().slice(0, 32);
     const ownerId = `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const vis = visibility === 'private' ? 'private' : 'public';
+    const desc = (description || '').trim().slice(0, 500);
+    const rm = readme?.trim() || `# ${name.trim()}\n\n${desc || 'A nova-browser repository.'}\n`;
 
-    await dbConnect();
+    await initRepoTables();
 
-    const existing = await Repo.findOne({ ownerName: owner, name: name.trim() });
-    if (existing) return NextResponse.json({ error: 'A repo with this name already exists for this owner' }, { status: 409 });
+    const result = await sql`
+      INSERT INTO repos (name, description, owner_name, owner_id, visibility, readme)
+      VALUES (${name.trim()}, ${desc}, ${owner}, ${ownerId}, ${vis}, ${rm})
+      RETURNING *
+    `;
 
-    const repo = await Repo.create({
-      name: name.trim(),
-      description: (description || '').trim().slice(0, 500),
-      ownerName: owner,
-      ownerId,
-      visibility: visibility === 'private' ? 'private' : 'public',
-      readme: readme || `# ${name.trim()}\n\n${description || 'A nova-browser repository.'}\n`,
-    });
-
-    return NextResponse.json({ repo }, { status: 201 });
+    return NextResponse.json({ repo: rowToRepo(result.rows[0]) }, { status: 201 });
   } catch (error: any) {
-    if (error.code === 11000) return NextResponse.json({ error: 'Repo name already taken' }, { status: 409 });
+    if (error.message?.includes('unique') || error.code === '23505') {
+      return NextResponse.json({ error: 'Repository name already taken for this owner' }, { status: 409 });
+    }
     console.error('Repo create error:', error);
-    return NextResponse.json({ error: 'Failed to create repo' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create repository', details: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }
