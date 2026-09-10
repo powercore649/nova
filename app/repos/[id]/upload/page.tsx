@@ -31,9 +31,12 @@ async function extractZip(zipFile: File): Promise<FileEntry[]> {
       for (const [path, content] of Object.entries(files)) {
         // Skip directories (end with /) and __MACOSX junk
         if (path.endsWith('/') || path.includes('__MACOSX') || path.includes('.DS_Store')) continue;
-        // Strip top-level folder if all files share one (common in GitHub ZIPs)
-        const blob = new Blob([content]);
-        const file = new File([blob], path.split('/').pop() || path, { type: guessMime(path) });
+        
+        // Convert Uint8Array to Blob safely
+        const blob = new Blob([content as Uint8Array]);
+        const fileName = path.split('/').pop() || path;
+        const file = new File([blob], fileName, { type: guessMime(path) });
+        
         entries.push({ file, relativePath: path, fromZip: true });
       }
       resolve(entries);
@@ -79,12 +82,10 @@ export default function RepoUploadPage() {
       const isZip = file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed';
 
       if (isZip) {
-        // Extract ZIP contents
         setExtracting(true);
         try {
           info(`Extracting ${file.name}…`);
           const extracted = await extractZip(file);
-          // Strip common root folder (e.g. "project-main/" prefix from GitHub ZIPs)
           const stripped = stripCommonRoot(extracted);
           for (const e of stripped) {
             if (!files.some(f => f.relativePath === e.relativePath)) {
