@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import JSZip from 'jszip';
@@ -56,7 +56,8 @@ export default function RepoUploadPage() {
             if (path.endsWith('/') || path.includes('__MACOSX') || path.includes('.DS_Store')) continue;
             
             const content = await zipEntry.async('uint8array');
-            const blob = new Blob([Buffer.from(content)]);
+            const standardBuffer = content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength);
+            const blob = new Blob([standardBuffer]);
             const extractedFile = new File([blob], path.split('/').pop() || path, { type: guessMime(path) });
             newEntries.push({ file: extractedFile, relativePath: path, fromZip: true });
           }
@@ -99,7 +100,7 @@ export default function RepoUploadPage() {
       const formData = new FormData();
       formData.append('repoId', repoId);
 
-      entries.forEach((entry, idx) => {
+      entries.forEach((entry) => {
         formData.append(`files`, entry.file);
         formData.append(`paths`, entry.relativePath);
       });
